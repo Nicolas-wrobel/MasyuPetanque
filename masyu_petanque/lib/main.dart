@@ -1,20 +1,227 @@
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const MasuiApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class MasuiApp extends StatelessWidget {
+  const MasuiApp({Key? key}) : super(key: key);
 
+  // MaterialApp qui définit le thème et le widget principal de l'application
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
+    return MaterialApp(
+      title: 'Masui',
+      theme: ThemeData(
+        primarySwatch: Colors.grey,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
         ),
       ),
+      home: FavoritesFilterProvider(
+        favoritesFilterNotifier: ValueNotifier(false),
+        child: const MainScreen(),
+      ),
+    );
+  }
+}
+
+class FavoritesFilterProvider extends InheritedWidget {
+  final ValueNotifier<bool> favoritesFilterNotifier;
+
+  const FavoritesFilterProvider({
+    Key? key,
+    required this.favoritesFilterNotifier,
+    required Widget child,
+  }) : super(key: key, child: child);
+
+  @override
+  bool updateShouldNotify(FavoritesFilterProvider oldWidget) {
+    return favoritesFilterNotifier != oldWidget.favoritesFilterNotifier;
+  }
+
+  static FavoritesFilterProvider? of(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<FavoritesFilterProvider>();
+  }
+}
+
+class MainScreen extends StatelessWidget {
+  const MainScreen({Key? key}) : super(key: key);
+
+  // L'écran principal avec la barre d'applications et le tiroir du menu
+  @override
+  Widget build(BuildContext context) {
+    final favoritesFilterNotifier = ValueNotifier<bool>(false);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Masyu',
+          style: TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
+        ),
+      ),
+      drawer: const DrawerMenu(),
+      body: CarouselWithFavorites(),
+    );
+  }
+}
+
+class DrawerMenu extends StatelessWidget {
+  const DrawerMenu({Key? key}) : super(key: key);
+
+  // Le menu tiroir avec les différentes options
+  @override
+  Widget build(BuildContext context) {
+    final favoritesFilterNotifier =
+        FavoritesFilterProvider.of(context)!.favoritesFilterNotifier;
+
+    return Drawer(
+      child: ListView(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.edit),
+            title: const Text('Edit'),
+            onTap: () {
+              // Add navigation logic here
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('Profile'),
+            onTap: () {
+              // Add navigation logic here
+            },
+          ),
+          ListTile(
+            leading: favoritesFilterNotifier.value
+                ? const Icon(Icons.home)
+                : const Icon(Icons.favorite),
+            title: favoritesFilterNotifier.value
+                ? const Text('Home')
+                : const Text('Favorites'),
+            onTap: () {
+              Navigator.pop(context); // Ferme le tiroir du menu
+              favoritesFilterNotifier.value = !favoritesFilterNotifier.value;
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class MapTileData {
+  final String mapName;
+  final String creatorName;
+  final String bestTime;
+  bool isFavorite;
+
+  MapTileData({
+    required this.mapName,
+    required this.creatorName,
+    required this.bestTime,
+    this.isFavorite = false,
+  });
+}
+
+List<MapTileData> mapData = [
+  MapTileData(
+    mapName: 'Nom de la map 1',
+    creatorName: 'Créateur 1',
+    bestTime: '00:30',
+  ),
+  MapTileData(
+    mapName: 'Nom de la map 2',
+    creatorName: 'Créateur 2',
+    bestTime: '00:45',
+  ),
+  MapTileData(
+    mapName: 'Nom de la map 3',
+    creatorName: 'Créateur 3',
+    bestTime: '00:50',
+  ),
+  // Ajoutez plus de MapTileData ici pour d'autres maps
+];
+
+class CarouselWithFavorites extends StatefulWidget {
+  const CarouselWithFavorites({Key? key}) : super(key: key);
+
+  // StatefulWidget pour gérer l'état des favoris et afficher le carrousel approprié
+  @override
+  _CarouselWithFavoritesState createState() => _CarouselWithFavoritesState();
+}
+
+class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
+  @override
+  Widget build(BuildContext context) {
+    final favoritesFilterNotifier =
+        FavoritesFilterProvider.of(context)!.favoritesFilterNotifier;
+    return ValueListenableBuilder<bool>(
+      valueListenable: favoritesFilterNotifier,
+      builder: (context, favoritesFilterEnabled, child) {
+        final filteredMaps = favoritesFilterEnabled
+            ? mapData.where((map) => map.isFavorite).toList()
+            : mapData;
+
+        return CarouselSlider.builder(
+          itemCount: filteredMaps.length,
+          itemBuilder: (BuildContext context, int index, int realIndex) {
+            final map = filteredMaps[index];
+
+            return Card(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(map.mapName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      )),
+                  const SizedBox(height: 10),
+                  const SizedBox(height: 10),
+                  Text('Créateur: ${map.creatorName}'),
+                  Text('Meilleur temps: ${map.bestTime}'),
+                  IconButton(
+                    icon: Icon(
+                      map.isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: map.isFavorite ? Colors.red : null,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        map.isFavorite = !map.isFavorite;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+          options: CarouselOptions(
+            height: MediaQuery.of(context).size.height * 0.8,
+            viewportFraction: 0.8,
+            enableInfiniteScroll: false,
+          ),
+        );
+      },
     );
   }
 }

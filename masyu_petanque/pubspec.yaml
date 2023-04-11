@@ -4,11 +4,14 @@ publish_to: 'none'
 version: 0.1.0
 
 environment:
-  sdk: '>=3.0.0-241.0.dev <4.0.0'
+  sdk: '>=3.0.0-192.0.dev <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
+  carousel_slider: ^4.0.0
+  provider: ^6.0.1
+
 
 dev_dependencies:
   flutter_test:
