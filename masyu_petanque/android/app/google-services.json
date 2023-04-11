@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "789073274063",
+    "firebase_url": "https://masyupetanque-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "masyupetanque",
+    "storage_bucket": "masyupetanque.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:789073274063:android:551faa3f1869e5f735c3ba",
+        "android_client_info": {
+          "package_name": "com.example.masyu_petanque"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "789073274063-91usa86vvdr17m076vam4q4os5ve98e0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnYOtGk2HThoRuDFBtELZi-eMff7suj7c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "789073274063-91usa86vvdr17m076vam4q4os5ve98e0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
