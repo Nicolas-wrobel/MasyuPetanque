@@ -41,7 +41,7 @@ class MainApp extends StatelessWidget {
       ),
       initialRoute: '/startup',
       routes: {
-        '/startup': (context) => StartupScreen(),
+        '/startup': (context) => StartupScreen.create(),
         '/home': (context) => const HomeScreen(),
         '/game': (context) => const GameScreen(),
         '/map_creator': (context) => const MapCreatorScreen(),

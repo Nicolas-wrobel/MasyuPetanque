@@ -1,10 +1,16 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
+import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
 
 class GameRepository {
-  final DatabaseReference _databaseReference;
+  final FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;
+  late DatabaseReference _databaseReference;
+  final UserRepository _userRepository;
 
-  GameRepository() : _databaseReference = FirebaseDatabase.instance.ref();
+  GameRepository({required UserRepository userRepository})
+      : _userRepository = userRepository {
+    _databaseReference = _firebaseDatabase.ref();
+  }
 
   Future<void> testDatabaseAccess() async {
     // Lire les données d'un utilisateur
@@ -71,5 +77,48 @@ class GameRepository {
         return [];
       }
     });
+  }
+
+  Future<String> createMap({
+    required DateTime creationDate,
+    required int height,
+    required int width,
+    required List<Map<String, int>> blackPoints,
+    required List<Map<String, int>> whitePoints,
+    required String name,
+    required List<Map<String, dynamic>> ranking,
+  }) async {
+    // Obtenez l'UID de l'utilisateur connecté
+    final authorId = _userRepository.getCurrentUser()?.uid;
+
+    // Vérifiez si un utilisateur est connecté
+    if (authorId == null) {
+      throw Exception('No user is currently signed in');
+    }
+
+    // Créez une nouvelle référence pour la carte
+    final mapRef = _databaseReference.child('maps').push();
+
+    // Construisez l'objet mapData
+    final mapData = {
+      'author': authorId,
+      'creation_date': creationDate.toIso8601String(),
+      'dimensions': {
+        'height': height,
+        'width': width,
+      },
+      'grid': {
+        'black_points': blackPoints,
+        'white_points': whitePoints,
+      },
+      'name': name,
+      'ranking': ranking,
+    };
+
+    // Enregistrez la nouvelle carte dans la base de données
+    await mapRef.set(mapData);
+
+    // Retournez l'ID de la nouvelle carte
+    return mapRef.key ?? '';
   }
 }
