@@ -79,6 +79,29 @@ class GameRepository {
     });
   }
 
+  Stream<List<Map<String, dynamic>>> getUserFavoriteMaps() {
+    return _databaseReference
+        .child('users/${_userRepository.getCurrentUser()?.uid}/favorite_maps')
+        .onValue
+        .map((event) {
+      if (event.snapshot.value != null) {
+        final Map<dynamic, dynamic> favoriteMapsData =
+            event.snapshot.value as Map;
+        return favoriteMapsData.entries.map<Map<String, dynamic>>((entry) {
+          final String key = entry.key.toString();
+          final Map<dynamic, dynamic> value = entry.value;
+          final Map<String, dynamic> mapDataWithId = value.map<String, dynamic>(
+            (key, value) => MapEntry(key.toString(), value),
+          );
+          mapDataWithId['id'] = key;
+          return mapDataWithId;
+        }).toList();
+      } else {
+        return [];
+      }
+    });
+  }
+
   Future<String> createMap({
     required int height,
     required int width,
@@ -122,64 +145,118 @@ class GameRepository {
     return mapRef.key ?? '';
   }
 
-  Future<String> saveAGamePlayedByAUser({
+  Future<void> saveAGamePlayedByAUser({
     required String mapId,
     required int timer,
   }) async {
-    // Obtenez l'UID de l'utilisateur connecté
+    // Get the UID of the signed-in user
     final userId = _userRepository.getCurrentUser()?.uid;
 
-    // Vérifiez si un utilisateur est connecté
+    // Check if a user is signed in
     if (userId == null) {
       throw Exception('No user is currently signed in');
     }
 
-    // Mettez à jour la liste des cartes jouées par l'utilisateur : users/$userId/played_maps
+    // Update the list of played maps by the user: users/$userId/played_maps
     final userPlayedMapsRef =
         _databaseReference.child('users/$userId/played_maps');
-    final userPlayedMapsDataSnapshot = await userPlayedMapsRef.once();
-    final userPlayedMapsData = userPlayedMapsDataSnapshot.snapshot.value;
-    if (userPlayedMapsData != null) {
-      final userPlayedMapsDataMap = userPlayedMapsData as Map;
-      final userPlayedMapsDataMapKeys = userPlayedMapsDataMap.keys;
-      if (!userPlayedMapsDataMapKeys.contains(mapId)) {
-        await userPlayedMapsRef.update({mapId: true});
-      }
-    } else {
-      await userPlayedMapsRef.set({mapId: true});
-    }
+    await userPlayedMapsRef.update({mapId: true});
 
-    // Mettez à jour users/$userId/played_maps/$mapId/best_time
+    // Update users/$userId/played_maps/$mapId/best_time
     final userPlayedMapBestTimeRef =
         _databaseReference.child('users/$userId/played_maps/$mapId/best_time');
     final userPlayedMapBestTimeDataSnapshot =
         await userPlayedMapBestTimeRef.once();
     final userPlayedMapBestTimeData =
         userPlayedMapBestTimeDataSnapshot.snapshot.value;
-    if (userPlayedMapBestTimeData != null) {
-      final userPlayedMapBestTimeDataInt = userPlayedMapBestTimeData as int;
-      if (timer < userPlayedMapBestTimeDataInt) {
-        await userPlayedMapBestTimeRef.set(timer);
-      }
-    } else {
+
+    if (userPlayedMapBestTimeData == null ||
+        timer < (userPlayedMapBestTimeData as num)) {
       await userPlayedMapBestTimeRef.set(timer);
     }
 
-    // Ajoutez le temps de jeu à la liste des temps de jeu de la carte : users/$userId/played_maps/$mapId/history/{timestamp: timer}
+    // Add the playtime to the list of playtimes of the map: users/$userId/played_maps/$mapId/history/{timestamp: timer}
     final userPlayedMapHistoryRef =
         _databaseReference.child('users/$userId/played_maps/$mapId/history');
-    final userPlayedMapHistoryDataSnapshot =
-        await userPlayedMapHistoryRef.once();
-    final userPlayedMapHistoryData =
-        userPlayedMapHistoryDataSnapshot.snapshot.value;
-    if (userPlayedMapHistoryData != null) {
-      final timestamp = DateTime.now().toIso8601String();
-      await userPlayedMapHistoryRef.update({timestamp: timer});
+    final timestamp = DateTime.now().toIso8601String();
+    await userPlayedMapHistoryRef.update({timestamp: timer});
+
+    // Update the ranking of the map: maps/$mapId/ranking/$rank/{user_id: timer}
+    final mapRankingRef = _databaseReference.child('maps/$mapId/ranking');
+    final mapRankingDataSnapshot = await mapRankingRef.once();
+    final mapRankingData = mapRankingDataSnapshot.snapshot.value;
+
+    if (mapRankingData != null) {
+      final Map<dynamic, dynamic> mapRankingDataMap =
+          mapRankingData as Map<dynamic, dynamic>;
+      final List<int> mapRankingDataMapKeysInt = mapRankingDataMap.keys
+          .map<int>((key) => int.parse(key))
+          .toList(growable: false);
+
+      int currentUserRankingIndex = mapRankingDataMapKeysInt
+          .indexWhere((key) => mapRankingDataMap[key.toString()] == userId);
+
+      int insertIndex = mapRankingDataMapKeysInt
+          .indexWhere((key) => timer < mapRankingDataMap[key.toString()]);
+
+      if (insertIndex == -1) insertIndex = mapRankingDataMapKeysInt.length;
+
+      if (currentUserRankingIndex == -1) {
+        // User is not currently in the ranking
+        mapRankingDataMapKeysInt.insert(insertIndex, timer);
+      } else {
+        // User is already in the ranking
+        if (timer <
+            mapRankingDataMap[
+                mapRankingDataMapKeysInt[currentUserRankingIndex].toString()]) {
+          // Update the existing user's time
+          mapRankingDataMapKeysInt.removeAt(currentUserRankingIndex);
+          mapRankingDataMapKeysInt.insert(insertIndex, timer);
+        }
+      }
+      await _updateRankingData(mapRankingRef, mapRankingDataMapKeysInt, userId);
     } else {
-      final timestamp = DateTime.now().toIso8601String();
-      await userPlayedMapHistoryRef.set({timestamp: timer});
+      // No existing ranking data, create a new entry for the user
+      await mapRankingRef.child('1').set({userId: timer});
+    }
+  }
+
+  Future<void> _updateRankingData(DatabaseReference mapRankingRef,
+      List<int> mapRankingDataMapKeysInt, String userId) async {
+    int rank = 1;
+    for (int key in mapRankingDataMapKeysInt) {
+      await mapRankingRef.child(rank.toString()).update({userId: key});
+      rank++;
+    }
+  }
+
+  Future<void> addMapToFavorites(String mapId) async {
+    // Get the UID of the signed-in user
+    final userId = _userRepository.getCurrentUser()?.uid;
+
+    // Check if a user is signed in
+    if (userId == null) {
+      throw Exception('No user is currently signed in');
     }
 
-    return 'ok';
+    // Update the list of favorite maps by the user: users/$userId/favorite_maps
+    final userFavoriteMapsRef =
+        _databaseReference.child('users/$userId/favorite_maps');
+    await userFavoriteMapsRef.update({mapId: true});
+  }
+
+  Future<void> removeMapFromFavorites(String mapId) async {
+    // Get the UID of the signed-in user
+    final userId = _userRepository.getCurrentUser()?.uid;
+
+    // Check if a user is signed in
+    if (userId == null) {
+      throw Exception('No user is currently signed in');
+    }
+
+    // Update the list of favorite maps by the user: users/$userId/favorite_maps
+    final userFavoriteMapsRef =
+        _databaseReference.child('users/$userId/favorite_maps');
+    await userFavoriteMapsRef.update({mapId: null});
   }
 }
