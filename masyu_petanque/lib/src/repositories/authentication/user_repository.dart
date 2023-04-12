@@ -55,6 +55,9 @@ class UserRepository {
 
             await _databaseReference.child('users/${user.uid}').set(newUser);
           } else {
+            if (kDebugMode) {
+              print("User named ${user.displayName} already exists");
+            }
             // Update the last connection time
             await _databaseReference
                 .child('users/${user.uid}/last_connection')
@@ -77,5 +80,13 @@ class UserRepository {
       print("getCurrentUser ${_auth.currentUser}");
     }
     return _auth.currentUser;
+  }
+
+  Future<void> signOut() async {
+    if (kDebugMode) {
+      print("signOut");
+    }
+    await _auth.signOut();
+    await _googleSignIn.signOut();
   }
 }
