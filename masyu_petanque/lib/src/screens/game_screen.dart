@@ -43,7 +43,7 @@ class GameGridScreen extends StatelessWidget {
                 .map((map) => [
                       Text(map['name'] as String),
                       Text(map['author'] as String),
-                      Text(map['ranking'][0]['user_id'] as String),
+                      Text(map['ranking'][0][""] as String),
                     ])
                 .expand((widgetList) => widgetList)
                 .toList(),

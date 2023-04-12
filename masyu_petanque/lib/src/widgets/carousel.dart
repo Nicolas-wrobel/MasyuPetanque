@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../repositories/database/game_repository.dart';
@@ -78,38 +77,42 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
       builder: (context, favoritesFilterEnabled, child) {
         final filteredMaps = favoritesFilterEnabled
             ? mapData.where((map) => map.isFavorite).toList()
-            : mapData;
+            : mapData.where((map) => !map.isFavorite).toList();
 
         return CarouselSlider.builder(
           itemCount: filteredMaps.length,
           itemBuilder: (BuildContext context, int index, int realIndex) {
             final map = filteredMaps[index];
 
-            return Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(map.mapName,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      )),
-                  const SizedBox(height: 10),
-                  const SizedBox(height: 10),
-                  Text('Créateur: ${map.creatorName}'),
-                  Text('Meilleur temps: ${map.bestTime}'),
-                  IconButton(
-                    icon: Icon(
-                      map.isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: map.isFavorite ? Colors.red : null,
+            return AnimatedSwitcher(
+              duration: Duration(milliseconds: 500),
+              child: Card(
+                key: ValueKey<String>(map.id),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(map.mapName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        )),
+                    const SizedBox(height: 10),
+                    const SizedBox(height: 10),
+                    Text('Créateur: ${map.creatorName}'),
+                    Text('Meilleur temps: ${map.bestTime}'),
+                    IconButton(
+                      icon: Icon(
+                        map.isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: map.isFavorite ? Colors.red : null,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          map.isFavorite = !map.isFavorite;
+                        });
+                      },
                     ),
-                    onPressed: () {
-                      setState(() {
-                        map.isFavorite = !map.isFavorite;
-                      });
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },

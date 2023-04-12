@@ -39,7 +39,7 @@ class MainApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
         colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.black),
       ),
-      initialRoute: '/home',
+      initialRoute: '/map_creator',
       routes: {
         '/startup': (context) => StartupScreen(),
         '/home': (context) => HomeScreen(),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../repositories/database/game_repository.dart';
 import '../widgets/burger_menu.dart';
 import '../widgets/carousel.dart';
 
@@ -8,8 +7,6 @@ void main() {
 }
 
 class HomeScreen extends StatelessWidget {
-  final GameRepository _gameRepository = GameRepository();
-
   HomeScreen({Key? key}) : super(key: key);
 
   // MaterialApp qui définit le thème et le widget principal de l'application
