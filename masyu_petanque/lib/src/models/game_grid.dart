@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 class GameGrid {
   final String? id;
   final String? name;
@@ -40,13 +42,20 @@ class GameGrid {
   }
 
   static List<Map<String, dynamic>> _convertRanking(List<dynamic> ranking) {
-    return ranking
-        .map((entry) => {
-              'date': entry['date'] ?? 'N/A',
-              'score': entry['score'] ?? 0,
-              'user_id': entry['user_id'] ?? 'N/A',
-            })
-        .toList();
+    return ranking.map((entry) {
+      if (entry == null) {
+        return {
+          'date': 'N/A',
+          'score': 0,
+          'user_id': 'N/A',
+        };
+      }
+      return {
+        'date': entry['date'] ?? 'N/A',
+        'score': entry['score'] ?? 0,
+        'user_id': entry['user_id'] ?? 'N/A',
+      };
+    }).toList();
   }
 }
 
