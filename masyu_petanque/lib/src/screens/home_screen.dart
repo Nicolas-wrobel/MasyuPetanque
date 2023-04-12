@@ -3,17 +3,17 @@ import '../widgets/burger_menu.dart';
 import '../widgets/carousel.dart';
 
 void main() {
-  runApp(HomeScreen());
+  runApp(const HomeScreen());
 }
 
 class HomeScreen extends StatelessWidget {
-  HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({Key? key}) : super(key: key);
 
   // MaterialApp qui définit le thème et le widget principal de l'application
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Masui',
+      title: 'Masyu',
       theme: ThemeData(
         primarySwatch: Colors.grey,
         appBarTheme: const AppBarTheme(
@@ -53,11 +53,9 @@ class FavoritesFilterProvider extends InheritedWidget {
 class MainScreen extends StatelessWidget {
   const MainScreen({Key? key}) : super(key: key);
 
-  // L'écran principal avec la barre d'applications et le tiroir du menu
+  // L'écran principal avec la barre d'applications et le burger menu
   @override
   Widget build(BuildContext context) {
-    final favoritesFilterNotifier = ValueNotifier<bool>(false);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -80,7 +78,7 @@ class MainScreen extends StatelessWidget {
         ),
       ),
       drawer: const DrawerMenu(),
-      body: CarouselWithFavorites(),
+      body: const CarouselWithFavorites(),
     );
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
 
-import '../models/game_grid.dart';
 import '../repositories/database/game_repository.dart';
 
 class GameScreen extends StatelessWidget {
@@ -14,9 +14,19 @@ class GameScreen extends StatelessWidget {
 }
 
 class GameGridScreen extends StatelessWidget {
-  final GameRepository _gameRepository = GameRepository();
+  final UserRepository _userRepository;
+  final GameRepository gameRepository;
 
-  GameGridScreen({super.key});
+  GameGridScreen.({Key? key, required UserRepository userRepository})
+      : _userRepository = userRepository,
+        gameRepository = GameRepository(userRepository: userRepository),
+        super(key: key);
+
+  // Static method to create an instance of GameGridScreen
+  static GameGridScreen create({Key? key}) {
+    final userRepository = UserRepository();
+    return GameGridScreen.(key: key, userRepository: userRepository);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,14 +49,10 @@ class GameGridScreen extends StatelessWidget {
 
           final List<Map<String, dynamic>> mapData = snapshot.data!;
           return Column(
-            children: mapData
-                .map((map) => [
-                      Text(map['name'] as String),
-                      Text(map['author'] as String),
-                      Text(map['ranking'][0][""] as String),
-                    ])
-                .expand((widgetList) => widgetList)
-                .toList(),
+            children: [
+              for (final Map<String, dynamic> map in mapData)
+                Text(map['name'] as String),
+            ],
           );
         },
       ),

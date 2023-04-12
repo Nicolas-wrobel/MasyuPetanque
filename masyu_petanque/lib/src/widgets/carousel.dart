@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 
+import '../models/game_grid.dart';
 import '../repositories/database/game_repository.dart';
 import '../screens/home_screen.dart';
+import 'game_grid_widget.dart';
 
 class MapTileData {
   final String id;
@@ -12,6 +14,7 @@ class MapTileData {
   final String creatorName;
   final String bestTime;
   bool isFavorite;
+  final GameGrid gameGrid;
 
   MapTileData({
     required this.id,
@@ -19,6 +22,7 @@ class MapTileData {
     required this.creatorName,
     required this.bestTime,
     this.isFavorite = false,
+    required this.gameGrid,
   });
 }
 
@@ -55,6 +59,15 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
             creatorName: map['author'],
             bestTime: map['bestTime'] ?? 'N/A',
             isFavorite: map['isFavorite'] ?? false,
+            gameGrid: GameGrid(
+              author: map['author'],
+              id: map['id'],
+              name: map['name'],
+              blackPoints: map['blackPoints'] ?? [],
+              whitePoints: map['whitePoints'] ?? [],
+              width: map['width'] ?? 5,
+              height: map['height'] ?? 5,
+            ),
           );
         }).toList();
       });
@@ -85,7 +98,7 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
             final map = filteredMaps[index];
 
             return AnimatedSwitcher(
-              duration: Duration(milliseconds: 500),
+              duration: const Duration(milliseconds: 500),
               child: Card(
                 key: ValueKey<String>(map.id),
                 child: Column(
@@ -97,6 +110,7 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
                           fontWeight: FontWeight.bold,
                         )),
                     const SizedBox(height: 10),
+                    GameGridWidget(gameGrid: map.gameGrid),
                     const SizedBox(height: 10),
                     Text('Créateur: ${map.creatorName}'),
                     Text('Meilleur temps: ${map.bestTime}'),
