@@ -1,61 +1,99 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:masyu_petanque/src/models/game_grid.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
-
-import '../repositories/database/game_repository.dart';
+import 'package:masyu_petanque/src/repositories/database/game_repository.dart';
+import 'package:masyu_petanque/src/widgets/game_grid_widget.dart';
 
 class GameScreen extends StatelessWidget {
-  const GameScreen({super.key});
+  final String mapId;
+
+  const GameScreen({Key? key, required this.mapId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-    throw UnimplementedError();
+    final userRepository = UserRepository();
+    final gameRepository = GameRepository(userRepository: userRepository);
+    final mapStream = gameRepository.getMapStreamById(mapId);
+
+    return Scaffold(
+      body: Column(
+        children: [
+          SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TimerText(),
+              ),
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<Map<String, dynamic>>(
+              stream: mapStream,
+              builder: (BuildContext context,
+                  AsyncSnapshot<Map<String, dynamic>> snapshot) {
+                if (snapshot.hasData) {
+                  GameGrid gameGrid = GameGrid.fromMap(mapId, snapshot.data!);
+                  return Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: AspectRatio(
+                        aspectRatio: gameGrid.width! / gameGrid.height!,
+                        child: GameGridWidget(gameGrid: gameGrid),
+                      ),
+                    ),
+                  );
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Erreur: ${snapshot.error}'));
+                } else {
+                  return Center(child: CircularProgressIndicator());
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
-class GameGridScreen extends StatelessWidget {
-  final UserRepository _userRepository;
-  final GameRepository _gameRepository;
+class TimerText extends StatefulWidget {
+  @override
+  _TimerTextState createState() => _TimerTextState();
+}
 
-  GameGridScreen._({Key? key, required UserRepository userRepository})
-      : _userRepository = userRepository,
-        _gameRepository = GameRepository(userRepository: userRepository),
-        super(key: key);
+class _TimerTextState extends State<TimerText> with TickerProviderStateMixin {
+  late AnimationController _timerController;
 
-  // Static method to create an instance of GameGridScreen
-  static GameGridScreen create({Key? key}) {
-    final userRepository = UserRepository();
-    return GameGridScreen._(key: key, userRepository: userRepository);
+  @override
+  void initState() {
+    super.initState();
+
+    _timerController = AnimationController(
+      vsync: this,
+      duration: const Duration(hours: 1),
+    );
+
+    _timerController.forward();
+  }
+
+  @override
+  void dispose() {
+    _timerController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Game Grid')),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _gameRepository.getAllMaps(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return const Center(child: Text('An error has occurred'));
-          }
-
-          if (snapshot.data == null) {
-            return const Center(child: Text('No data available'));
-          }
-
-          final List<Map<String, dynamic>> mapData = snapshot.data!;
-          return Column(
-            children: [
-              for (final Map<String, dynamic> map in mapData)
-                Text(map['name'] as String),
-            ],
-          );
-        },
-      ),
+    return AnimatedBuilder(
+      animation: _timerController,
+      builder: (BuildContext context, Widget? child) {
+        Duration elapsedTime =
+            _timerController.duration! * _timerController.value;
+        String timerText =
+            '${elapsedTime.inMinutes.toString().padLeft(2, '0')}:${(elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}.${(elapsedTime.inMilliseconds % 1000 ~/ 10).toString().padLeft(2, '0')}';
+        return Text(timerText, style: TextStyle(fontSize: 24));
+      },
     );
   }
 }
