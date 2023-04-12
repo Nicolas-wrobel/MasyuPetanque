@@ -71,4 +71,11 @@ class UserRepository {
     }
     return null;
   }
+
+  User? getCurrentUser() {
+    if (kDebugMode) {
+      print("getCurrentUser ${_auth.currentUser}");
+    }
+    return _auth.currentUser;
+  }
 }

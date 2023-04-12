@@ -1,17 +1,31 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
-import 'package:masyu_petanque/src/repositories/database/game_repository.dart';
-import 'package:masyu_petanque/src/screens/game_screen.dart';
+import 'package:masyu_petanque/src/screens/home_screen.dart';
 
 class StartupScreen extends StatelessWidget {
-  StartupScreen({super.key});
+  final UserRepository _userRepository;
 
-  final GameRepository _gameRepository = GameRepository();
-  final UserRepository _userRepository = UserRepository();
-  final String mapId = 'map1_id';
+  const StartupScreen._({Key? key, required UserRepository userRepository})
+      : _userRepository = userRepository,
+        super(key: key);
+
+  // Static method to create an instance of StartupScreen
+  static StartupScreen create({Key? key}) {
+    final userRepository = UserRepository();
+    return StartupScreen._(key: key, userRepository: userRepository);
+  }
+
+  Future<bool> _isUserAuthenticated() async {
+    User? currentUser = _userRepository.getCurrentUser();
+    if (currentUser != null) {
+      return true;
+    } else {
+      User? user = await _userRepository.signInWithGoogle();
+      return user != null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,17 +51,22 @@ class StartupScreen extends StatelessWidget {
               ),
               Center(
                 child: GestureDetector(
-                  onTap: () async {
-                    User? user = await _userRepository.signInWithGoogle();
-                    if (user != null) {
-                      if (kDebugMode) {
-                        print('User: ${user.displayName}');
-                      }
-                    } else {
-                      if (kDebugMode) {
-                        print('User is null');
-                      }
-                    }
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FutureBuilder<bool>(
+                          future: _isUserAuthenticated(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData && snapshot.data == true) {
+                              return const HomeScreen();
+                            } else {
+                              return const CircularProgressIndicator();
+                            }
+                          },
+                        ),
+                      ),
+                    );
                   },
                   child: Text(
                     '[ JOUER ]',

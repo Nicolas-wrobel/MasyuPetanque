@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
 
-import '../models/game_grid.dart';
 import '../repositories/database/game_repository.dart';
 
 class GameScreen extends StatelessWidget {
@@ -14,9 +14,19 @@ class GameScreen extends StatelessWidget {
 }
 
 class GameGridScreen extends StatelessWidget {
-  final GameRepository _gameRepository = GameRepository();
+  final UserRepository _userRepository;
+  final GameRepository _gameRepository;
 
-  GameGridScreen({super.key});
+  GameGridScreen._({Key? key, required UserRepository userRepository})
+      : _userRepository = userRepository,
+        _gameRepository = GameRepository(userRepository: userRepository),
+        super(key: key);
+
+  // Static method to create an instance of GameGridScreen
+  static GameGridScreen create({Key? key}) {
+    final userRepository = UserRepository();
+    return GameGridScreen._(key: key, userRepository: userRepository);
+  }
 
   @override
   Widget build(BuildContext context) {
