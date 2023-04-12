@@ -80,13 +80,11 @@ class GameRepository {
   }
 
   Future<String> createMap({
-    required DateTime creationDate,
     required int height,
     required int width,
     required List<Map<String, int>> blackPoints,
     required List<Map<String, int>> whitePoints,
     required String name,
-    required List<Map<String, dynamic>> ranking,
   }) async {
     // Obtenez l'UID de l'utilisateur connecté
     final authorId = _userRepository.getCurrentUser()?.uid;
@@ -98,6 +96,9 @@ class GameRepository {
 
     // Créez une nouvelle référence pour la carte
     final mapRef = _databaseReference.child('maps').push();
+
+    // Obtenez la date de création de la carte
+    final creationDate = DateTime.now();
 
     // Construisez l'objet mapData
     final mapData = {
@@ -112,7 +113,6 @@ class GameRepository {
         'white_points': whitePoints,
       },
       'name': name,
-      'ranking': ranking,
     };
 
     // Enregistrez la nouvelle carte dans la base de données
@@ -120,5 +120,66 @@ class GameRepository {
 
     // Retournez l'ID de la nouvelle carte
     return mapRef.key ?? '';
+  }
+
+  Future<String> saveAGamePlayedByAUser({
+    required String mapId,
+    required int timer,
+  }) async {
+    // Obtenez l'UID de l'utilisateur connecté
+    final userId = _userRepository.getCurrentUser()?.uid;
+
+    // Vérifiez si un utilisateur est connecté
+    if (userId == null) {
+      throw Exception('No user is currently signed in');
+    }
+
+    // Mettez à jour la liste des cartes jouées par l'utilisateur : users/$userId/played_maps
+    final userPlayedMapsRef =
+        _databaseReference.child('users/$userId/played_maps');
+    final userPlayedMapsDataSnapshot = await userPlayedMapsRef.once();
+    final userPlayedMapsData = userPlayedMapsDataSnapshot.snapshot.value;
+    if (userPlayedMapsData != null) {
+      final userPlayedMapsDataMap = userPlayedMapsData as Map;
+      final userPlayedMapsDataMapKeys = userPlayedMapsDataMap.keys;
+      if (!userPlayedMapsDataMapKeys.contains(mapId)) {
+        await userPlayedMapsRef.update({mapId: true});
+      }
+    } else {
+      await userPlayedMapsRef.set({mapId: true});
+    }
+
+    // Mettez à jour users/$userId/played_maps/$mapId/best_time
+    final userPlayedMapBestTimeRef =
+        _databaseReference.child('users/$userId/played_maps/$mapId/best_time');
+    final userPlayedMapBestTimeDataSnapshot =
+        await userPlayedMapBestTimeRef.once();
+    final userPlayedMapBestTimeData =
+        userPlayedMapBestTimeDataSnapshot.snapshot.value;
+    if (userPlayedMapBestTimeData != null) {
+      final userPlayedMapBestTimeDataInt = userPlayedMapBestTimeData as int;
+      if (timer < userPlayedMapBestTimeDataInt) {
+        await userPlayedMapBestTimeRef.set(timer);
+      }
+    } else {
+      await userPlayedMapBestTimeRef.set(timer);
+    }
+
+    // Ajoutez le temps de jeu à la liste des temps de jeu de la carte : users/$userId/played_maps/$mapId/history/{timestamp: timer}
+    final userPlayedMapHistoryRef =
+        _databaseReference.child('users/$userId/played_maps/$mapId/history');
+    final userPlayedMapHistoryDataSnapshot =
+        await userPlayedMapHistoryRef.once();
+    final userPlayedMapHistoryData =
+        userPlayedMapHistoryDataSnapshot.snapshot.value;
+    if (userPlayedMapHistoryData != null) {
+      final timestamp = DateTime.now().toIso8601String();
+      await userPlayedMapHistoryRef.update({timestamp: timer});
+    } else {
+      final timestamp = DateTime.now().toIso8601String();
+      await userPlayedMapHistoryRef.set({timestamp: timer});
+    }
+
+    return 'ok';
   }
 }
