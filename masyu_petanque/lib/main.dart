@@ -1,13 +1,36 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MasuiApp());
+import 'src/repositories/database/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+import 'package:masyu_petanque/src/screens/game_screen.dart';
+import 'package:masyu_petanque/src/screens/home_screen.dart';
+import 'package:masyu_petanque/src/screens/map_creator_screen.dart';
+import 'package:masyu_petanque/src/screens/profile_screen.dart';
+import 'package:masyu_petanque/src/screens/startup_screen.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (kDebugMode) {
+    print("Firebase initializing...");
+  }
+  try {
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
+    runApp(const MasuiApp());
 }
 
 class MasuiApp extends StatelessWidget {
   const MasuiApp({Key? key}) : super(key: key);
+  } catch (e) {
+    if (kDebugMode) {
+      print(e);
+    }
+  }
 
   // MaterialApp qui définit le thème et le widget principal de l'application
   @override
@@ -56,29 +79,21 @@ class MainScreen extends StatelessWidget {
   // L'écran principal avec la barre d'applications et le tiroir du menu
   @override
   Widget build(BuildContext context) {
-    final favoritesFilterNotifier = ValueNotifier<bool>(false);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Masyu',
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          },
-        ),
+    return MaterialApp(
+      title: 'Masyu Game',
+      theme: ThemeData(
+        primaryColor: Colors.black,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.black),
       ),
+      initialRoute: '/startup',
+      routes: {
+        '/startup': (context) => StartupScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/game': (context) => const GameScreen(),
+        '/map_creator': (context) => const MapCreatorScreen(),
+        '/profile': (context) => const ProfileScreen(),
+      },
       drawer: const DrawerMenu(),
       body: CarouselWithFavorites(),
     );
