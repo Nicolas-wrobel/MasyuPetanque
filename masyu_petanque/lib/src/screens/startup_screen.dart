@@ -58,8 +58,13 @@ class StartupScreen extends StatelessWidget {
                         builder: (context) => FutureBuilder<bool>(
                           future: _isUserAuthenticated(),
                           builder: (context, snapshot) {
-                            if (snapshot.hasData && snapshot.data == true) {
-                              return const HomeScreen();
+                            if (snapshot.connectionState ==
+                                ConnectionState.done) {
+                              if (snapshot.hasData && snapshot.data == true) {
+                                return HomeScreen.create(key: key);
+                              } else {
+                                return const Text('Error');
+                              }
                             } else {
                               return const CircularProgressIndicator();
                             }
