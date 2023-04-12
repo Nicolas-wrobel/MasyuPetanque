@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/game_grid.dart';
+import 'package:masyu_petanque/src/utils/game_checker.dart';
+import 'package:collection/collection.dart';
 
 class GameGridWidget extends StatefulWidget {
   final GameGrid gameGrid;
@@ -7,11 +9,45 @@ class GameGridWidget extends StatefulWidget {
   const GameGridWidget({required this.gameGrid, Key? key}) : super(key: key);
 
   @override
-  _GameGridWidgetState createState() => _GameGridWidgetState();
+  GameGridWidgetState createState() => GameGridWidgetState();
 }
 
-class _GameGridWidgetState extends State<GameGridWidget> {
+class GameGridWidgetState extends State<GameGridWidget> {
   final List<List<int>> liaisons = [];
+
+  void undo() {
+    setState(() {
+      if (liaisons.isNotEmpty) {
+        liaisons.removeLast();
+      }
+    });
+  }
+
+  void clear() {
+    setState(() {
+      liaisons.clear();
+    });
+  }
+
+  void _showVictoryDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Victoire !'),
+          content: Text('Félicitations, vous avez gagné !'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,8 +90,39 @@ class _GameGridWidgetState extends State<GameGridWidget> {
 
         // Ajoutez les coordonnées des deux cases à la liste des liaisons.
         setState(() {
-          liaisons.add([x1, y1, x2, y2]);
+          // Vérifiez si la liaison existe déjà
+          int index = liaisons.indexWhere((liaison) =>
+              liaison[0] == x1 &&
+              liaison[1] == y1 &&
+              liaison[2] == x2 &&
+              liaison[3] == y2);
+
+          if (index != -1) {
+            liaisons.removeAt(index);
+            print('Liaison supprimée: [$x1, $y1, $x2, $y2]');
+          } else {
+            liaisons.add([x1, y1, x2, y2]);
+            print('Liaison ajoutée: [$x1, $y1, $x2, $y2]');
+          }
         });
+        if (isVictory(
+          widget.gameGrid.blackPoints!
+              .map((point) => {'x': point[0], 'y': point[1]})
+              .toList(),
+          widget.gameGrid.whitePoints!
+              .map((point) => {'x': point[0], 'y': point[1]})
+              .toList(),
+          liaisons
+              .map((liaison) => {
+                    'x1': liaison[0],
+                    'y1': liaison[1],
+                    'x2': liaison[2],
+                    'y2': liaison[3]
+                  })
+              .toList(),
+        )) {
+          _showVictoryDialog();
+        }
       },
       child: Center(
         child: Container(
@@ -67,10 +134,11 @@ class _GameGridWidgetState extends State<GameGridWidget> {
             painter:
                 _GameGridPainter(liaisons: liaisons, gameGrid: widget.gameGrid),
             child: GridView.builder(
+              padding: EdgeInsets.zero,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: widget.gameGrid.width!,
                 childAspectRatio: 1,
-                mainAxisSpacing: 3,
+                mainAxisSpacing: 1.75,
                 crossAxisSpacing: 2,
               ),
               itemBuilder: (context, index) {

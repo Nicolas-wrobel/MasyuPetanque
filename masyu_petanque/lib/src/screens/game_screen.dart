@@ -26,6 +26,19 @@ class GameScreen extends StatelessWidget {
                 AsyncSnapshot<Map<String, dynamic>> snapshot) {
               if (snapshot.hasData) {
                 GameGrid gameGrid = GameGrid.fromMap(mapId, snapshot.data!);
+
+                final GlobalKey<GameGridWidgetState> gameGridWidgetKey =
+                    GlobalKey<GameGridWidgetState>();
+
+                GameGridWidget gameGridWidget = GameGridWidget(
+                  key: gameGridWidgetKey,
+                  gameGrid: gameGrid,
+                );
+
+                final GlobalKey<_TimerTextState> timerTextStateKey =
+                    GlobalKey<_TimerTextState>();
+                TimerText timerTextWidget = TimerText(key: timerTextStateKey);
+
                 return Column(
                   children: [
                     Padding(
@@ -45,12 +58,12 @@ class GameScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    TimerText(),
+                    timerTextWidget,
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: AspectRatio(
                         aspectRatio: gameGrid.width! / gameGrid.height!,
-                        child: GameGridWidget(gameGrid: gameGrid),
+                        child: gameGridWidget,
                       ),
                     ),
                     Padding(
@@ -83,16 +96,24 @@ class GameScreen extends StatelessWidget {
                                 },
                               );
                               if (resetGame != null && resetGame) {
-                                // Reset timer and call clear function here
+                                timerTextStateKey.currentState!.resetTimer();
+                                gameGridWidgetKey.currentState!.clear();
                               }
                             },
                             child: const Text('Recommencer'),
                           ),
                           ElevatedButton(
-                            onPressed: () {
-                              // Clear function here
-                            },
+                            onPressed: () =>
+                                gameGridWidgetKey.currentState!.clear(),
                             child: const Text('Clear'),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              gameGridWidgetKey.currentState!.undo();
+                            },
+                            icon: const Icon(Icons.undo),
+                            color: Colors.black,
+                            iconSize: 24.0,
                           ),
                         ],
                       ),
@@ -113,7 +134,7 @@ class GameScreen extends StatelessWidget {
 }
 
 class TimerText extends StatefulWidget {
-  const TimerText({super.key});
+  const TimerText({Key? key}) : super(key: key);
 
   @override
   _TimerTextState createState() => _TimerTextState();
@@ -161,5 +182,12 @@ class _TimerTextState extends State<TimerText> with TickerProviderStateMixin {
         );
       },
     );
+  }
+
+  void resetTimer() {
+    setState(() {
+      _timerController.reset();
+      _timerController.forward();
+    });
   }
 }
