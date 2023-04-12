@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 import 'package:masyu_petanque/src/repositories/database/game_repository.dart';
 import 'package:masyu_petanque/src/screens/game_screen.dart';
 
@@ -17,17 +17,12 @@ class StartupScreen extends StatelessWidget {
         child: SafeArea(
           child: Stack(
             children: [
-              Align(
+              const Align(
                 alignment: Alignment.topCenter,
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16.0),
                   child: Text(
                     'Masyu Game',
-                    style: GoogleFonts.robotoSlab(
-                      fontSize: 24,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
                   ),
                 ),
               ),
@@ -40,13 +35,8 @@ class StartupScreen extends StatelessWidget {
                       MaterialPageRoute(builder: (context) => GameGridScreen()),
                     );
                   },
-                  child: Text(
+                  child: const Text(
                     '[ JOUER ]',
-                    style: GoogleFonts.robotoSlab(
-                      fontSize: 18,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
                   ),
                 ),
               ),

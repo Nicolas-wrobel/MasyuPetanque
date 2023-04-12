@@ -39,10 +39,14 @@ class GameGridScreen extends StatelessWidget {
 
           final List<Map<String, dynamic>> mapData = snapshot.data!;
           return Column(
-            children: [
-              for (final Map<String, dynamic> map in mapData)
-                Text(map['name'] as String),
-            ],
+            children: mapData
+                .map((map) => [
+                      Text(map['name'] as String),
+                      Text(map['author'] as String),
+                      Text(map['ranking'][0]['user_id'] as String),
+                    ])
+                .expand((widgetList) => widgetList)
+                .toList(),
           );
         },
       ),
