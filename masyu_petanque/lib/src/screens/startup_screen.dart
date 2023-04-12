@@ -17,13 +17,17 @@ class StartupScreen extends StatelessWidget {
     return StartupScreen._(key: key, userRepository: userRepository);
   }
 
-  Future<bool> _isUserAuthenticated() async {
+  Future<String?> _isUserAuthenticated() async {
     User? currentUser = _userRepository.getCurrentUser();
     if (currentUser != null) {
-      return true;
+      return null;
     } else {
       User? user = await _userRepository.signInWithGoogle();
-      return user != null;
+      if (user != null) {
+        return null;
+      } else {
+        return "Sign in failed. Please try again.";
+      }
     }
   }
 
@@ -55,15 +59,21 @@ class StartupScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => FutureBuilder<bool>(
+                        builder: (context) => FutureBuilder<String?>(
                           future: _isUserAuthenticated(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.done) {
-                              if (snapshot.hasData && snapshot.data == true) {
-                                return HomeScreen.create(key: key);
+                              if (snapshot.hasData && snapshot.data != null) {
+                                // Show an error message to the user
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(snapshot.data!),
+                                  ),
+                                );
+                                return const CircularProgressIndicator(); // Keep the loading indicator if authentication fails
                               } else {
-                                return const Text('Error');
+                                return HomeScreen.create(key: key);
                               }
                             } else {
                               return const CircularProgressIndicator();
