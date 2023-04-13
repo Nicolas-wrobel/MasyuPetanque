@@ -25,14 +25,14 @@ class GameScreen extends StatelessWidget {
             builder: (BuildContext context,
                 AsyncSnapshot<Map<String, dynamic>> snapshot) {
               if (snapshot.hasData) {
-                GameGrid gameGrid = GameGrid.fromMap(mapId, snapshot.data!);
+                GameMap gameGrid = GameMap.fromMap(snapshot.data!, mapId);
 
                 final GlobalKey<GameGridWidgetState> gameGridWidgetKey =
                     GlobalKey<GameGridWidgetState>();
 
                 GameGridWidget gameGridWidget = GameGridWidget(
                   key: gameGridWidgetKey,
-                  gameGrid: gameGrid,
+                  gameMap: gameGrid,
                 );
 
                 final GlobalKey<_TimerTextState> timerTextStateKey =
@@ -62,7 +62,7 @@ class GameScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: AspectRatio(
-                        aspectRatio: gameGrid.width! / gameGrid.height!,
+                        aspectRatio: gameGrid.grid.width / gameGrid.grid.height,
                         child: gameGridWidget,
                       ),
                     ),

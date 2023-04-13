@@ -1,15 +1,11 @@
-import 'dart:ffi';
-
-class GameGrid {
-  final String? id;
-  final String? name;
-  final String? author;
-  final String? creationDate;
-  final int? width;
-  final int? height;
-  final List<List>? blackPoints;
-  final List<List>? whitePoints;
-  final List<Map<String, dynamic>>? ranking;
+class GameMap {
+  final String id;
+  final String name;
+  final String author;
+  final DateTime creationDate;
+  final GameGrid grid;
+  final List<GameRanking>? ranking;
+  final bestTime;
 
   GameMap({
     required this.id,
@@ -88,11 +84,11 @@ class GameGrid {
           x: map['white_points'][i]['x'], y: map['white_points'][i]['y']));
     }
 
-  static List<List<dynamic>> _convertPoints(List<dynamic> points) {
-    return List.castFrom<dynamic, List<dynamic>>(points
-        .map((point) => point != null ? [point['x'], point['y']] : null)
-        .where((point) => point != null)
-        .toList());
+    return GameGrid(
+        width: width,
+        height: height,
+        blackPoints: blackPoints,
+        whitePoints: whitePoints);
   }
 }
 
@@ -102,21 +98,11 @@ class Point {
 
   Point({required this.x, required this.y});
 
-  static List<Map<String, dynamic>> _convertRanking(List<dynamic> ranking) {
-    return ranking.map((entry) {
-      if (entry == null) {
-        return {
-          'date': 'N/A',
-          'score': 0,
-          'user_id': 'N/A',
-        };
-      }
-      return {
-        'date': entry['date'] ?? 'N/A',
-        'score': entry['score'] ?? 0,
-        'user_id': entry['user_id'] ?? 'N/A',
-      };
-    }).toList();
+  factory Point.fromMap(Map<String, dynamic> map) {
+    return Point(
+      x: map['x'] as int,
+      y: map['y'] as int,
+    );
   }
 }
 

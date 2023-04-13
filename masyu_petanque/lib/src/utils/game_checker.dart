@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
-
+import 'package:masyu_petanque/src/models/game_grid.dart';
+/*
 class Point {
   int x;
   int y;
@@ -11,7 +12,7 @@ class Point {
   String toString() {
     return 'Point(x: $x, y: $y, color: $color)';
   }
-}
+}*/
 
 class Connection {
   int x1;

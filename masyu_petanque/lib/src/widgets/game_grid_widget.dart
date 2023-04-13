@@ -3,9 +3,12 @@ import 'package:masyu_petanque/src/models/game_grid.dart';
 import 'package:masyu_petanque/src/utils/game_checker.dart';
 
 class GameGridWidget extends StatefulWidget {
-  final GameGrid gameGrid;
+  final GameMap gameMap;
+  final bool isPreview;
 
-  const GameGridWidget({required this.gameGrid, Key? key}) : super(key: key);
+  const GameGridWidget(
+      {required this.gameMap, this.isPreview = false, Key? key})
+      : super(key: key);
 
   @override
   GameGridWidgetState createState() => GameGridWidgetState();
@@ -50,13 +53,19 @@ class GameGridWidgetState extends State<GameGridWidget> {
 
   @override
   Widget build(BuildContext context) {
+    return widget.isPreview
+        ? IgnorePointer(child: buildGameGrid(context))
+        : buildGameGrid(context);
+  }
+
+  Widget buildGameGrid(BuildContext context) {
     return GestureDetector(
       onTapDown: (TapDownDetails details) {
         RenderBox box = context.findRenderObject() as RenderBox;
         Offset localPosition = box.globalToLocal(details.globalPosition);
 
-        double cellWidth = box.size.width / widget.gameGrid.width!;
-        double cellHeight = box.size.height / widget.gameGrid.height!;
+        double cellWidth = box.size.width / widget.gameMap.grid.width;
+        double cellHeight = box.size.height / widget.gameMap.grid.height;
 
         int x1 = (localPosition.dx / cellWidth).floor();
         int y1 = (localPosition.dy / cellHeight).floor();
@@ -71,17 +80,17 @@ class GameGridWidgetState extends State<GameGridWidget> {
         // Déterminez si nous devons tracer un trait horizontal ou vertical
         if ((relativeX < cellWidth / 4 && x1 > 0) ||
             (relativeX > cellWidth * 3 / 4 &&
-                x1 < widget.gameGrid.width! - 1)) {
+                x1 < widget.gameMap.grid.width - 1)) {
           x2 = relativeX < cellWidth / 4 ? x1 - 1 : x1 + 1;
         } else if ((relativeY < cellHeight / 4 && y1 > 0) ||
             (relativeY > cellHeight * 3 / 4 &&
-                y1 < widget.gameGrid.height! - 1)) {
+                y1 < widget.gameMap.grid.height - 1)) {
           y2 = relativeY < cellHeight / 4 ? y1 - 1 : y1 + 1;
         } else {
           // Gestion des cas aux bords de la grille pour les traits verticaux
           if (x1 == 0 && relativeX < cellWidth / 4) {
             x2 = x1 + 1;
-          } else if (x1 == widget.gameGrid.width! - 1 &&
+          } else if (x1 == widget.gameMap.grid.width - 1 &&
               relativeX > cellWidth * 3 / 4) {
             x2 = x1 - 1;
           }
@@ -121,12 +130,8 @@ class GameGridWidgetState extends State<GameGridWidget> {
         });
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (isVictory(
-            widget.gameGrid.blackPoints!
-                .map((point) => Point(point[0], point[1], 'B'))
-                .toList(),
-            widget.gameGrid.whitePoints!
-                .map((point) => Point(point[0], point[1], 'W'))
-                .toList(),
+            widget.gameMap.grid.blackPoints,
+            widget.gameMap.grid.whitePoints,
             liaisons
                 .map((liaison) =>
                     Connection(liaison[0], liaison[1], liaison[2], liaison[3]))
@@ -143,26 +148,26 @@ class GameGridWidgetState extends State<GameGridWidget> {
             border: Border.all(color: Colors.black, width: 2),
           ),
           child: CustomPaint(
-            painter:
-                _GameGridPainter(liaisons: liaisons, gameGrid: widget.gameGrid),
+            painter: _GameGridPainter(
+                liaisons: liaisons, gameGrid: widget.gameMap.grid),
             child: GridView.builder(
               padding: EdgeInsets.zero,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: widget.gameGrid.width!,
+                crossAxisCount: widget.gameMap.grid.width,
                 childAspectRatio: 1,
                 mainAxisSpacing: 1.75,
                 crossAxisSpacing: 2,
               ),
               itemBuilder: (context, index) {
-                int x = index % widget.gameGrid.width!;
-                int y = index ~/ widget.gameGrid.width!;
+                int x = index % widget.gameMap.grid.width;
+                int y = index ~/ widget.gameMap.grid.width;
 
-                if (widget.gameGrid.blackPoints!
-                    .any((point) => point[0] == x && point[1] == y)) {
+                if (widget.gameMap.grid.blackPoints
+                    .any((point) => point.x == x && point.y == y)) {
                   return const _GridPoint(
                       color: Colors.black, sizePercentage: 0.5);
-                } else if (widget.gameGrid.whitePoints!
-                    .any((point) => point[0] == x && point[1] == y)) {
+                } else if (widget.gameMap.grid.whitePoints
+                    .any((point) => point.x == x && point.y == y)) {
                   return const _GridPoint(
                       color: Colors.white,
                       borderColor: Colors.black,
@@ -172,7 +177,7 @@ class GameGridWidgetState extends State<GameGridWidget> {
                       color: Colors.grey.withOpacity(0.2), sizePercentage: 0.2);
                 }
               },
-              itemCount: widget.gameGrid.width! * widget.gameGrid.height!,
+              itemCount: widget.gameMap.grid.width * widget.gameMap.grid.height,
             ),
           ),
         ),
@@ -223,8 +228,8 @@ class _GameGridPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    double cellWidth = size.width / gameGrid.width!;
-    double cellHeight = size.height / gameGrid.height!;
+    double cellWidth = size.width / gameGrid.width;
+    double cellHeight = size.height / gameGrid.height;
     double strokeWidth = cellWidth * 0.1;
 
     Paint paint = Paint()
