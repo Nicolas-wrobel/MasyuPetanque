@@ -75,6 +75,12 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
                 final displayedMaps =
                     favoritesFilterEnabled ? favoriteMaps : mapData;
 
+                if (favoritesFilterEnabled && favoriteMaps.isEmpty) {
+                  return const Center(
+                    child: Text("Vous n'avez pas encore de cartes favorites"),
+                  );
+                }
+
                 return CarouselSlider.builder(
                   itemCount: displayedMaps.length,
                   itemBuilder:
