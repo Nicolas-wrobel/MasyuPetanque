@@ -1,9 +1,6 @@
 import 'dart:async';
 
-import 'package:carousel_slider/carousel_options.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/user.dart';
@@ -97,7 +94,11 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
                                   fontWeight: FontWeight.bold,
                                 )),
                             const SizedBox(height: 10),
-                            GameGridWidget(gameMap: map),
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height *
+                                  0.4, // Ajustez cette valeur selon vos besoins
+                              child: GameGridWidget(gameMap: map),
+                            ),
                             const SizedBox(height: 10),
                             Text('Créateur: ${map.author}'),
                             Text('Meilleur temps: ${map.bestTime ?? 'N/A'}'),
