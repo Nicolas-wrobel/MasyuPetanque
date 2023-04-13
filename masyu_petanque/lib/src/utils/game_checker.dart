@@ -6,6 +6,11 @@ class Point {
   String color;
 
   Point(this.x, this.y, this.color);
+
+  @override
+  String toString() {
+    return 'Point(x: $x, y: $y, color: $color)';
+  }
 }
 
 class Connection {
@@ -15,22 +20,40 @@ class Connection {
   int y2;
 
   Connection(this.x1, this.y1, this.x2, this.y2);
+
+  @override
+  String toString() {
+    return 'Connection(x1: $x1, y1: $y1, x2: $x2, y2: $y2)';
+  }
 }
 
-bool isVictory(
-    List<Map<String, dynamic>> black_points,
-    List<Map<String, dynamic>> white_points,
-    List<Map<String, dynamic>> connections_data) {
+bool hasCycleDFS(
+    int node, int parent, Map<int, List<int>> graph, Map<int, bool> visited) {
+  visited[node] = true;
+
+  for (int neighbor in graph[node]!) {
+    if (!visited[neighbor]!) {
+      if (hasCycleDFS(neighbor, node, graph, visited)) {
+        return true;
+      }
+    } else if (neighbor != parent) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool isVictory(List<Point> black_points, List<Point> white_points,
+    List<Connection> connections) {
   print('Points noirs: $black_points');
   print('Points blancs: $white_points');
-  print('Liaisons: $connections_data');
+  print('Liaisons: $connections');
+
   List<Point> points = [
-    ...black_points.map((p) => Point(p['x'], p['y'], 'B')),
-    ...white_points.map((p) => Point(p['x'], p['y'], 'W')),
+    ...black_points,
+    ...white_points,
   ];
-  List<Connection> connections = connections_data
-      .map((c) => Connection(c['x1'], c['y1'], c['x2'], c['y2']))
-      .toList();
 
   Point? getPoint(int x, int y) {
     return points.firstWhereOrNull((p) => p.x == x && p.y == y);
@@ -44,28 +67,42 @@ bool isVictory(
         .toList();
   }
 
+  Map<int, List<int>> buildGraph() {
+    Map<int, List<int>> graph = {};
+    for (Point point in points) {
+      graph[point.x * 10 + point.y] = [];
+    }
+    for (Connection connection in connections) {
+      int node1 = connection.x1 * 10 + connection.y1;
+      int node2 = connection.x2 * 10 + connection.y2;
+      graph.putIfAbsent(node1, () => []).add(node2);
+      graph.putIfAbsent(node2, () => []).add(node1);
+    }
+    return graph;
+  }
+
   bool checkLoop() {
-    Set<Point> visited = {};
-    void dfs(Point point, Connection? previousConnection) {
-      if (visited.contains(point)) return;
-      visited.add(point);
-      for (Connection connection in getConnections(point)) {
-        if (previousConnection == connection) continue;
-        Point? next = getPoint(connection.x1, connection.y1) == point
-            ? getPoint(connection.x2, connection.y2)
-            : getPoint(connection.x1, connection.y1);
-        if (next != null) {
-          dfs(next, connection);
+    Map<int, List<int>> graph = buildGraph();
+    Map<int, bool> visited = {for (var key in graph.keys) key: false};
+
+    for (int node in graph.keys) {
+      if (!visited[node]!) {
+        if (hasCycleDFS(node, -1, graph, visited)) {
+          return true;
         }
       }
     }
 
-    dfs(points.first, null);
-    return visited.length == points.length;
+    return false;
   }
 
+  // Vérifier qu'une boucle existe
+  bool loopExists = checkLoop();
+  print('Loop exists: $loopExists');
+  if (!loopExists) return false;
   bool checkBlackPoint(Point point) {
     List<Connection> pointConnections = getConnections(point);
+    print('Black point: $point, connections: $pointConnections');
 
     if (pointConnections.length != 2) return false;
 
@@ -75,11 +112,13 @@ bool isVictory(
     bool oppositeDirections =
         (c1.x1 - c1.x2) * (c2.x1 - c2.x2) + (c1.y1 - c1.y2) * (c2.y1 - c2.y2) ==
             0;
+    print('Opposite directions: $oppositeDirections');
     return oppositeDirections;
   }
 
   bool checkWhitePoint(Point point) {
     List<Connection> pointConnections = getConnections(point);
+    print('White point: $point, connections: $pointConnections');
 
     if (pointConnections.length != 2) return false;
 
@@ -89,19 +128,21 @@ bool isVictory(
     bool sameDirections =
         (c1.x1 - c1.x2) * (c2.x1 - c2.x2) + (c1.y1 - c1.y2) * (c2.y1 - c2.y2) !=
             0;
+    print('Same directions: $sameDirections');
     return sameDirections;
   }
 
-  // Vérifier qu'une boucle existe
-  if (!checkLoop()) return false;
+  bool loopDetected = checkLoop();
+  print('Loop detected: $loopDetected');
+  if (!loopDetected) return false;
 
-  // Vérifier que les points noirs sont bien reliés
-  for (Point point in black_points.map((p) => Point(p['x'], p['y'], 'B'))) {
+// Vérifier que les points noirs sont bien reliés
+  for (Point point in black_points) {
     if (!checkBlackPoint(point)) return false;
   }
 
-  // Vérifier que les points blancs sont bien reliés
-  for (Point point in white_points.map((p) => Point(p['x'], p['y'], 'W'))) {
+// Vérifier que les points blancs sont bien reliés
+  for (Point point in white_points) {
     if (!checkWhitePoint(point)) return false;
   }
 

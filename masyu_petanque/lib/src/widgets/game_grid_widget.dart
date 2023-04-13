@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/game_grid.dart';
 import 'package:masyu_petanque/src/utils/game_checker.dart';
-import 'package:collection/collection.dart';
 
 class GameGridWidget extends StatefulWidget {
   final GameGrid gameGrid;
@@ -92,37 +91,50 @@ class GameGridWidgetState extends State<GameGridWidget> {
         setState(() {
           // Vérifiez si la liaison existe déjà
           int index = liaisons.indexWhere((liaison) =>
-              liaison[0] == x1 &&
-              liaison[1] == y1 &&
-              liaison[2] == x2 &&
-              liaison[3] == y2);
+              (liaison[0] == x1 &&
+                  liaison[1] == y1 &&
+                  liaison[2] == x2 &&
+                  liaison[3] == y2) ||
+              (liaison[0] == x2 &&
+                  liaison[1] == y2 &&
+                  liaison[2] == x1 &&
+                  liaison[3] == y1));
 
           if (index != -1) {
             liaisons.removeAt(index);
             print('Liaison supprimée: [$x1, $y1, $x2, $y2]');
           } else {
-            liaisons.add([x1, y1, x2, y2]);
-            print('Liaison ajoutée: [$x1, $y1, $x2, $y2]');
+            if ((x1 == x2 && (y1 == y2 + 1 || y1 == y2 - 1)) ||
+                (y1 == y2 && (x1 == x2 + 1 || x1 == x2 - 1))) {
+              if (x1 > x2 || (x1 == x2 && y1 > y2)) {
+                int tempX = x1;
+                int tempY = y1;
+                x1 = x2;
+                y1 = y2;
+                x2 = tempX;
+                y2 = tempY;
+              }
+              liaisons.add([x1, y1, x2, y2]);
+              print('Liaison ajoutée: [$x1, $y1, $x2, $y2]');
+            }
           }
         });
-        if (isVictory(
-          widget.gameGrid.blackPoints!
-              .map((point) => {'x': point[0], 'y': point[1]})
-              .toList(),
-          widget.gameGrid.whitePoints!
-              .map((point) => {'x': point[0], 'y': point[1]})
-              .toList(),
-          liaisons
-              .map((liaison) => {
-                    'x1': liaison[0],
-                    'y1': liaison[1],
-                    'x2': liaison[2],
-                    'y2': liaison[3]
-                  })
-              .toList(),
-        )) {
-          _showVictoryDialog();
-        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (isVictory(
+            widget.gameGrid.blackPoints!
+                .map((point) => Point(point[0], point[1], 'B'))
+                .toList(),
+            widget.gameGrid.whitePoints!
+                .map((point) => Point(point[0], point[1], 'W'))
+                .toList(),
+            liaisons
+                .map((liaison) =>
+                    Connection(liaison[0], liaison[1], liaison[2], liaison[3]))
+                .toList(),
+          )) {
+            _showVictoryDialog();
+          }
+        });
       },
       child: Center(
         child: Container(
@@ -145,17 +157,19 @@ class GameGridWidgetState extends State<GameGridWidget> {
                 int x = index % widget.gameGrid.width!;
                 int y = index ~/ widget.gameGrid.width!;
 
-                // Vérifiez si le point est noir ou blanc
                 if (widget.gameGrid.blackPoints!
                     .any((point) => point[0] == x && point[1] == y)) {
-                  return const _GridPoint(color: Colors.black, size: 14);
+                  return const _GridPoint(
+                      color: Colors.black, sizePercentage: 0.5);
                 } else if (widget.gameGrid.whitePoints!
                     .any((point) => point[0] == x && point[1] == y)) {
                   return const _GridPoint(
-                      color: Colors.white, borderColor: Colors.black, size: 14);
+                      color: Colors.white,
+                      borderColor: Colors.black,
+                      sizePercentage: 0.5);
                 } else {
                   return _GridPoint(
-                      color: Colors.grey.withOpacity(0.2), size: 8);
+                      color: Colors.grey.withOpacity(0.2), sizePercentage: 0.2);
                 }
               },
               itemCount: widget.gameGrid.width! * widget.gameGrid.height!,
@@ -170,29 +184,34 @@ class GameGridWidgetState extends State<GameGridWidget> {
 class _GridPoint extends StatelessWidget {
   final Color color;
   final Color? borderColor;
-  final double size;
+  final double sizePercentage;
 
   const _GridPoint(
-      {Key? key, required this.color, this.borderColor, required this.size})
+      {Key? key,
+      required this.color,
+      this.borderColor,
+      required this.sizePercentage})
       : super(key: key);
 
-  @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.all(
-            1), // Ajoutez une marge pour éviter le chevauchement
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color,
-          border: borderColor != null
-              ? Border.all(color: borderColor!, width: 1)
-              : null,
+    return LayoutBuilder(builder: (context, constraints) {
+      double size = constraints.maxWidth * sizePercentage;
+
+      return Center(
+        child: Container(
+          margin: const EdgeInsets.all(1),
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+            border: borderColor != null
+                ? Border.all(color: borderColor!, width: 1)
+                : null,
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }
 
@@ -206,9 +225,13 @@ class _GameGridPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     double cellWidth = size.width / gameGrid.width!;
     double cellHeight = size.height / gameGrid.height!;
+    double strokeWidth = cellWidth * 0.1;
+
     Paint paint = Paint()
       ..color = Colors.black
-      ..strokeWidth = 4; // Ajuster la taille des traits
+      ..strokeWidth = strokeWidth;
+
+    double extension = cellWidth * 0.05;
 
     for (List<int> liaison in liaisons) {
       int x1 = liaison[0];
@@ -216,13 +239,36 @@ class _GameGridPainter extends CustomPainter {
       int x2 = liaison[2];
       int y2 = liaison[3];
 
-      canvas.drawLine(
-        Offset(x1 * cellWidth + cellWidth / 2,
-            y1 * cellHeight + cellHeight / 2 - 1),
-        Offset(x2 * cellWidth + cellWidth / 2,
-            y2 * cellHeight + cellHeight / 2 - 1),
-        paint,
-      );
+      Offset startPoint = Offset(
+          x1 * cellWidth + cellWidth / 2, y1 * cellHeight + cellHeight / 2);
+      Offset endPoint = Offset(
+          x2 * cellWidth + cellWidth / 2, y2 * cellHeight + cellHeight / 2);
+
+      if (x1 == x2) {
+        // Cas vertical
+        double startY =
+            y1 < y2 ? startPoint.dy - extension : startPoint.dy + extension;
+        double endY =
+            y1 < y2 ? endPoint.dy + extension : endPoint.dy - extension;
+
+        canvas.drawLine(
+          Offset(startPoint.dx, startY),
+          Offset(endPoint.dx, endY),
+          paint,
+        );
+      } else {
+        // Cas horizontal
+        double startX =
+            x1 < x2 ? startPoint.dx - extension : startPoint.dx + extension;
+        double endX =
+            x1 < x2 ? endPoint.dx + extension : endPoint.dx - extension;
+
+        canvas.drawLine(
+          Offset(startX, startPoint.dy),
+          Offset(endX, endPoint.dy),
+          paint,
+        );
+      }
     }
   }
 

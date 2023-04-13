@@ -37,8 +37,11 @@ class GameGrid {
     );
   }
 
-  static List<List> _convertPoints(List<dynamic> points) {
-    return points.map((point) => [point['x'], point['y']]).toList();
+  static List<List<dynamic>> _convertPoints(List<dynamic> points) {
+    return List.castFrom<dynamic, List<dynamic>>(points
+        .map((point) => point != null ? [point['x'], point['y']] : null)
+        .where((point) => point != null)
+        .toList());
   }
 
   static List<Map<String, dynamic>> _convertRanking(List<dynamic> ranking) {
