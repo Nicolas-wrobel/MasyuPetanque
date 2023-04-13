@@ -5,7 +5,7 @@ class GameMap {
   final DateTime creationDate;
   final GameGrid grid;
   final List<GameRanking>? ranking;
-  final bestTime;
+  final String? bestTime;
 
   GameMap({
     required this.id,
@@ -13,32 +13,44 @@ class GameMap {
     required this.author,
     required this.creationDate,
     required this.grid,
-    required this.bestTime,
+    this.bestTime,
     this.ranking,
   });
 
   factory GameMap.fromMap(Map<String, dynamic> map, String id) {
-    String id = map['id'] as String;
+    print(map);
     String name = map['name'] as String;
     String author = map['author'] as String;
     DateTime creationDate = DateTime.parse(map['creation_date'] as String);
-    GameGrid grid = GameGrid.fromMap(map['grid'] as Map<String, dynamic>);
+    Map<String, dynamic> dimensions = {
+      for (var k in map['dimensions'].keys) k.toString(): map['dimensions'][k]
+    };
+    GameGrid grid = GameGrid.fromMap(dimensions, map);
 
-    List<GameRanking> ranking = [];
-    for (int i = 1; i < map['ranking'].length; i++) {
-      ranking.add(GameRanking.fromMap(map['ranking'][i]));
+    List<GameRanking>? ranking;
+    String? bestTime;
+
+    if (map.containsKey('ranking')) {
+      ranking = (map['ranking'] as List<dynamic>)
+          .sublist(1)
+          .map<GameRanking>((dynamic e) {
+        Map<String, dynamic> rankingMap = {
+          for (var k in (e as Map).keys) k.toString(): e[k]
+        };
+        return GameRanking.fromMap(rankingMap);
+      }).toList();
+      bestTime = ranking[0].time;
     }
 
-    String bestTime = ranking[0].time;
-
     return GameMap(
-        id: id,
-        name: name,
-        author: author,
-        creationDate: creationDate,
-        grid: grid,
-        ranking: ranking,
-        bestTime: bestTime);
+      id: id,
+      name: name,
+      author: author,
+      creationDate: creationDate,
+      grid: grid,
+      bestTime: bestTime,
+      ranking: ranking,
+    );
   }
 }
 
@@ -68,27 +80,36 @@ class GameGrid {
       required this.blackPoints,
       required this.whitePoints});
 
-  factory GameGrid.fromMap(Map<String, dynamic> map) {
-    int width = map['dimensions']['width'] as int;
-    int height = map['dimensions']['height'] as int;
+  factory GameGrid.fromMap(
+      Map<String, dynamic> dimensions, Map<String, dynamic> map) {
+    int width = dimensions['width'] as int;
+    int height = dimensions['height'] as int;
 
-    List<Point> blackPoints = [];
-    for (int i = 1; i < map['black_points'].length; i++) {
-      blackPoints.add(Point(
-          x: map['black_points'][i]['x'], y: map['black_points'][i]['y']));
-    }
+    print(map['grid']['black_points']);
+    List<Point> blackPoints = (map['grid']['black_points'] as List<dynamic>)
+        .sublist(1)
+        .map<Point>((dynamic e) {
+      Map<String, dynamic> pointMap = {
+        for (var k in (e as Map).keys) k.toString(): e[k]
+      };
+      return Point.fromMap(pointMap);
+    }).toList();
 
-    List<Point> whitePoints = [];
-    for (int i = 1; i < map['white_points'].length; i++) {
-      whitePoints.add(Point(
-          x: map['white_points'][i]['x'], y: map['white_points'][i]['y']));
-    }
+    List<Point> whitePoints = (map['grid']['white_points'] as List<dynamic>)
+        .sublist(1)
+        .map<Point>((dynamic e) {
+      Map<String, dynamic> pointMap = {
+        for (var k in (e as Map).keys) k.toString(): e[k]
+      };
+      return Point.fromMap(pointMap);
+    }).toList();
 
     return GameGrid(
-        width: width,
-        height: height,
-        blackPoints: blackPoints,
-        whitePoints: whitePoints);
+      width: width,
+      height: height,
+      blackPoints: blackPoints,
+      whitePoints: whitePoints,
+    );
   }
 }
 
@@ -103,18 +124,5 @@ class Point {
       x: map['x'] as int,
       y: map['y'] as int,
     );
-  }
-}
-
-class GameGridList {
-  final List<GameGrid> gameGrids;
-
-  GameGridList() : gameGrids = [];
-
-  void addGameGridListFromMap(List<Map<String, dynamic>> mapList) {
-    gameGrids.clear();
-    for (var map in mapList) {
-      gameGrids.add(GameGrid.fromMap(map));
-    }
   }
 }

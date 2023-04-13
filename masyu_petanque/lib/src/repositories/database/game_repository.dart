@@ -270,16 +270,20 @@ class GameRepository {
         event.snapshot.value as Map<dynamic, dynamic>?;
 
     if (kDebugMode) {
-      print("toutes les maps: $mapsData");
+      print("mapsData: $mapsData");
     }
 
     if (mapsData != null) {
       return mapsData.entries.map<GameMap>((entry) {
         final String key = entry.key.toString();
         final Map<dynamic, dynamic> value = entry.value;
-        final Map<String, dynamic> mapDataWithId = value.map<String, dynamic>(
-          (key, value) => MapEntry(key.toString(), value),
-        );
+        if (kDebugMode) {
+          print("Juste une map: $value");
+        }
+
+        final Map<String, dynamic> mapDataWithId = {
+          for (var k in value.keys) k.toString(): value[k],
+        };
         mapDataWithId['id'] = key;
         return GameMap.fromMap(mapDataWithId, key);
       }).toList();

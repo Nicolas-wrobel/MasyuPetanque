@@ -21,7 +21,7 @@ class LocalUser {
 
   static LocalUser fromMap(Map<String, dynamic> map, String id) {
     if (kDebugMode) {
-      print("voici la map reçu $map");
+      print("voici le user reçu $map");
     }
 
     // Ajouter uniquement à partir du deuxième élément de la liste
