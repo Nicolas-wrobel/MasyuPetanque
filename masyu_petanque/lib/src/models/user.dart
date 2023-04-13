@@ -24,14 +24,12 @@ class LocalUser {
       print("voici le user reçu $map");
     }
 
-    // Ajouter uniquement à partir du deuxième élément de la liste
     List<String> favoriteMaps = [];
     if (map['favorite_maps'] != null) {
-      if (map['favorite_maps'].length > 1) {
-        for (int i = 1; i < map['favorite_maps'].length; i++) {
-          favoriteMaps.add(map['favorite_maps'][i]['map_id']);
-        }
-      }
+      final Map<dynamic, dynamic> favoriteMapsData = map['favorite_maps'];
+      favoriteMapsData.forEach((key, value) {
+        favoriteMaps.add(value['map_id']);
+      });
     }
 
     // Gérer le cas où played_maps est vide ou null
