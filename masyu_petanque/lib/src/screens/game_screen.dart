@@ -14,14 +14,19 @@ class GameScreen extends StatelessWidget {
 }
 
 class GameGridScreen extends StatelessWidget {
-  // final UserRepository _userRepository;
-  // final GameRepository gameRepository;
+  final UserRepository _userRepository;
+  final GameRepository _gameRepository;
+
+  GameGridScreen._({Key? key, required UserRepository userRepository})
+      : _userRepository = userRepository,
+        _gameRepository = GameRepository(userRepository: userRepository),
+        super(key: key);
 
   // Static method to create an instance of GameGridScreen
-  // static GameGridScreen create({Key? key}) {
-  // final userRepository = UserRepository();
-  // return GameGridScreen.(key: key, userRepository: userRepository);
-  // }
+  static GameGridScreen create({Key? key}) {
+    final userRepository = UserRepository();
+    return GameGridScreen._(key: key, userRepository: userRepository);
+  }
 
   @override
   Widget build(BuildContext context) {
