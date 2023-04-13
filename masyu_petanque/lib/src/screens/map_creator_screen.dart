@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
 import '../widgets/burger_menu.dart';
 
 class MapCreatorScreen extends StatelessWidget {
@@ -6,6 +7,7 @@ class MapCreatorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userRepository = UserRepository();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Map Editor'),
@@ -18,11 +20,11 @@ class MapCreatorScreen extends StatelessWidget {
           },
         ),
       ),
-      drawer: const DrawerMenu(),
-      body: SingleChildScrollView(
+      drawer: DrawerMenu(userRepository: userRepository),
+      body: const SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: const [
+          children: [
             MapNameAndDimensionForm(),
             MapEditor(),
             ValidateButton(),

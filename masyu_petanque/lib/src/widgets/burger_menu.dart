@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
+import 'package:masyu_petanque/src/screens/startup_screen.dart';
 
 import '../screens/home_screen.dart';
 
 class DrawerMenu extends StatelessWidget {
-  const DrawerMenu({Key? key}) : super(key: key);
+  final UserRepository userRepository;
+
+  const DrawerMenu({Key? key, required this.userRepository}) : super(key: key);
 
   // Le menu tiroir avec les différentes options
   @override
@@ -38,6 +42,17 @@ class DrawerMenu extends StatelessWidget {
             onTap: () {
               Navigator.pop(context); // Ferme le tiroir du menu
               favoritesFilterNotifier.value = !favoritesFilterNotifier.value;
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Sign Out'),
+            onTap: () async {
+              const rootRouteName = '/startup';
+              final navigator = Navigator.of(context);
+              await userRepository.signOut();
+              navigator.pushNamedAndRemoveUntil(rootRouteName,
+                  (route) => route.settings.name == rootRouteName);
             },
           ),
         ],

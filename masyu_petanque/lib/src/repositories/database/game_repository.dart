@@ -97,7 +97,6 @@ class GameRepository {
           final Map<String, dynamic> mapDataWithId = value.map<String, dynamic>(
             (key, value) => MapEntry(key.toString(), value),
           );
-          mapDataWithId['id'] = key;
           return mapDataWithId;
         }).toList();
       } else {
@@ -246,7 +245,8 @@ class GameRepository {
     // Update the list of favorite maps by the user: users/$userId/favorite_maps
     final userFavoriteMapsRef =
         _databaseReference.child('users/$userId/favorite_maps');
-    await userFavoriteMapsRef.update({mapId: true});
+    final newFavoriteMapRef = userFavoriteMapsRef.push();
+    await newFavoriteMapRef.set({'map_id': mapId});
   }
 
   Future<void> removeMapFromFavorites(String mapId) async {
@@ -258,10 +258,30 @@ class GameRepository {
       throw Exception('No user is currently signed in');
     }
 
-    // Update the list of favorite maps by the user: users/$userId/favorite_maps
+    // Retrieve the list of favorite maps by the user: users/$userId/favorite_maps
     final userFavoriteMapsRef =
         _databaseReference.child('users/$userId/favorite_maps');
-    await userFavoriteMapsRef.update({mapId: null});
+    DatabaseEvent event = await userFavoriteMapsRef.once();
+
+    print(event.snapshot.value);
+
+    if (event.snapshot.value != null) {
+      final Map<dynamic, dynamic> favoriteMapsData =
+          event.snapshot.value as Map<dynamic, dynamic>;
+
+      // Find the key of the map to be removed
+      String mapKeyToRemove = "";
+      favoriteMapsData.forEach((key, value) {
+        if (value['map_id'] == mapId) {
+          mapKeyToRemove = key;
+        }
+      });
+
+      // Remove the map from the favorites if it was found
+      if (mapKeyToRemove.isNotEmpty) {
+        await userFavoriteMapsRef.child(mapKeyToRemove).remove();
+      }
+    }
   }
 
   Future<List<GameMap>> getAllMapsOnce() async {
