@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/game_grid.dart';
 import 'package:masyu_petanque/src/utils/game_checker.dart';
+import 'package:masyu_petanque/src/screens/map_creator_screen.dart';
 
 class GameGridWidget extends StatefulWidget {
   final GameMap gameMap;
@@ -128,6 +129,7 @@ class GameGridWidgetState extends State<GameGridWidget> {
             }
           }
         });
+
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (isVictory(
             widget.gameMap.grid.blackPoints,

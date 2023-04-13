@@ -114,12 +114,12 @@ class GameRepository {
     required String name,
   }) async {
     // Obtenez l'UID de l'utilisateur connecté
-    final authorId = _userRepository.getCurrentUser()?.uid;
+    // final authorId = _userRepository.getCurrentUser()?.uid;
 
-    // Vérifiez si un utilisateur est connecté
-    if (authorId == null) {
-      throw Exception('No user is currently signed in');
-    }
+    // // Vérifiez si un utilisateur est connecté
+    // if (authorId == null) {
+    //   throw Exception('No user is currently signed in');
+    // }
 
     // Créez une nouvelle référence pour la carte
     final mapRef = _databaseReference.child('maps').push();
@@ -129,7 +129,7 @@ class GameRepository {
 
     // Construisez l'objet mapData
     final mapData = {
-      'author': authorId,
+      'author': "userTest",
       'creation_date': creationDate.toIso8601String(),
       'dimensions': {
         'height': height,

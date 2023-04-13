@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:masyu_petanque/src/models/game_grid.dart';
 import '../repositories/authentication/user_repository.dart';
 import '../repositories/database/game_repository.dart';
 import '../widgets/burger_menu.dart';
 import 'dart:async';
+
+import '../widgets/game_grid_editor.dart';
+
+enum ToolMode {
+  addBlackCircle,
+  addWhiteCircle,
+  addBlackLine,
+  eraseItem,
+  undoAction
+}
+
+ToolMode currentToolMode = ToolMode.addBlackCircle;
 
 Future<void> showAlertDialog(
     BuildContext context, String title, String content) {
@@ -31,17 +44,34 @@ Future<void> showAlertDialog(
 }
 
 List<Map<String, int>> blanc = [
-  {'x1': 1, 'y1': 1},
-  {'x2': 2, 'y2': 2},
+  {},
+  {'x': 1, 'y': 1},
+  {'x': 2, 'y': 2},
 ];
 
 List<Map<String, int>> noir = [
-  {'x1': 3, 'y1': 3},
-  {'x2': 4, 'y2': 4},
+  {},
+  {'x': 3, 'y': 3},
+  {'x': 4, 'y': 4},
 ];
 
-class MapEditorScreen extends StatelessWidget {
-  MapEditorScreen({Key? key}) : super(key: key);
+class MapCreatorScreen extends StatefulWidget {
+  MapCreatorScreen({Key? key}) : super(key: key);
+
+  @override
+  _MapCreatorScreenState createState() => _MapCreatorScreenState();
+}
+
+class _MapCreatorScreenState extends State<MapCreatorScreen> {
+  List<String> previousActions = [];
+
+  GameMap gameMap = GameMap(
+    author: "",
+    creationDate: DateTime.now(),
+    grid: GameGrid(blackPoints: [], whitePoints: [], width: 6, height: 6),
+    id: '',
+    name: '',
+  );
 
   final GameRepository _gameRepository =
       GameRepository(userRepository: UserRepository());
@@ -50,7 +80,7 @@ class MapEditorScreen extends StatelessWidget {
   final TextEditingController widthController = TextEditingController();
   final TextEditingController heightController = TextEditingController();
 
-  void _validateAndCreateMap(BuildContext context) {
+  void _validateAndCreateMap(BuildContext context, GameMap gamemap) {
     if (heightController.text.trim().isEmpty ||
         widthController.text.trim().isEmpty ||
         mapNameController.text.trim().isEmpty) {
@@ -77,6 +107,7 @@ class MapEditorScreen extends StatelessWidget {
     });
   }
 
+//--------------------------------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -149,9 +180,23 @@ class MapEditorScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Expanded(
               child: Container(
-                color: Colors.grey[200],
-                // Votre widget pour afficher la map ici
-              ),
+                  color: Colors.grey[200],
+                  // Votre widget pour afficher la map ici
+
+                  child: GameGridWidgetEditor(
+                    gameMap: GameMap(
+                      author: gameMap.getAuthor,
+                      creationDate: DateTime.now(),
+                      grid: GameGrid(
+                          blackPoints: gameMap.getGrid.blackPoints,
+                          whitePoints: gameMap.getGrid.blackPoints,
+                          width: gameMap.getGrid.width,
+                          height: gameMap.getGrid.height),
+                      id: '',
+                      name: '',
+                    ),
+                    tool: currentToolMode,
+                  )),
             ),
             const SizedBox(height: 16),
             Container(
@@ -166,32 +211,42 @@ class MapEditorScreen extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.circle, color: Colors.black),
                     onPressed: () {
-                      // Ajoutez votre logique pour le bouton rond noir ici
+                      setState(() {
+                        currentToolMode = ToolMode.addBlackCircle;
+                      });
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.circle, color: Colors.white),
                     onPressed: () {
-                      // Ajoutez votre logique pour le bouton rond blanc ici
+                      setState(() {
+                        currentToolMode = ToolMode.addWhiteCircle;
+                      });
                     },
                   ),
                   IconButton(
                     icon:
                         const Icon(Icons.horizontal_rule, color: Colors.black),
                     onPressed: () {
-                      // Ajoutez votre logique pour le bouton barre noire ici
+                      setState(() {
+                        currentToolMode = ToolMode.addBlackLine;
+                      });
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete),
                     onPressed: () {
-                      // Ajoutez votre logique pour le bouton gomme ici
+                      setState(() {
+                        currentToolMode = ToolMode.eraseItem;
+                      });
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.undo),
                     onPressed: () {
-                      // Ajoutez votre logique pour le bouton retour en arrière ici
+                      setState(() {
+                        currentToolMode = ToolMode.undoAction;
+                      });
                     },
                   ),
                 ],
@@ -200,7 +255,7 @@ class MapEditorScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Center(
               child: ElevatedButton(
-                onPressed: () => _validateAndCreateMap(context),
+                onPressed: () => _validateAndCreateMap(context, gameMap),
                 child: const Text('Validate'),
               ),
             ),
@@ -209,4 +264,10 @@ class MapEditorScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+@override
+Widget build(BuildContext context) {
+  // TODO: implement build
+  throw UnimplementedError();
 }

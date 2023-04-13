@@ -46,7 +46,7 @@ class MainApp extends StatelessWidget {
         '/game': (context) => const GameScreen(
               mapId: "map1_id",
             ),
-        '/map_creator': (context) => const MapCreatorScreen(),
+        '/map_creator': (context) => MapCreatorScreen(),
         '/profile': (context) => const ProfileScreen(),
       },
     );
