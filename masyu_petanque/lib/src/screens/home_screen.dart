@@ -4,7 +4,7 @@ import '../widgets/carousel.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
 
 void main() {
-  runApp(const HomeScreen());
+  runApp(HomeScreen._(userRepository: UserRepository()));
 }
 
 class HomeScreen extends StatelessWidget {
@@ -63,7 +63,7 @@ class FavoritesFilterProvider extends InheritedWidget {
 
 class MainScreen extends StatelessWidget {
   const MainScreen({Key? key}) : super(key: key);
-  
+
   // L'écran principal avec la barre d'applications et le burger menu
   @override
   Widget build(BuildContext context) {

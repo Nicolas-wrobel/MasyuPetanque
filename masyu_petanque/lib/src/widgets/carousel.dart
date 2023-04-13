@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:carousel_slider/carousel_options.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
 
 import '../models/game_grid.dart';
 import '../repositories/database/game_repository.dart';
@@ -18,7 +20,8 @@ class CarouselWithFavorites extends StatefulWidget {
 }
 
 class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
-  final GameRepository _gameRepository = GameRepository();
+  final GameRepository _gameRepository =
+      GameRepository(userRepository: UserRepository());
   List<Map<String, dynamic>> mapData = [];
 
   @override
@@ -52,8 +55,8 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
       valueListenable: favoritesFilterNotifier,
       builder: (context, favoritesFilterEnabled, child) {
         final filteredMaps = favoritesFilterEnabled
-            ? mapData.where((map) => map['isFavorite'] as bool).toList()
-            : mapData.where((map) => !(map['isFavorite'] as bool)).toList();
+            ? mapData.where((map) => true).toList()
+            : mapData.where((map) => false).toList();
 
         return CarouselSlider.builder(
           itemCount: filteredMaps.length,
