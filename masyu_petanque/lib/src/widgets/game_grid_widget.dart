@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/game_grid.dart';
+import 'package:masyu_petanque/src/screens/game_screen.dart';
 import 'package:masyu_petanque/src/utils/game_checker.dart';
 
 class GameGridWidget extends StatefulWidget {
   final GameMap gameMap;
+  final VoidCallback? onMapSolved;
   final bool isPreview;
 
   const GameGridWidget(
-      {required this.gameMap, this.isPreview = false, Key? key})
+      {Key? key,
+      required this.gameMap,
+      this.onMapSolved,
+      this.isPreview = false})
       : super(key: key);
 
   @override
@@ -31,19 +36,30 @@ class GameGridWidgetState extends State<GameGridWidget> {
     });
   }
 
-  void _showVictoryDialog() {
+  String formatElapsedTime(Duration elapsedTime) {
+    String hours = elapsedTime.inHours > 0 ? '${elapsedTime.inHours}:' : '';
+    String minutes =
+        '${elapsedTime.inMinutes.remainder(60).toString().padLeft(2, '0')}:';
+    String seconds = (elapsedTime.inSeconds % 60).toString().padLeft(2, '0');
+    String milliseconds =
+        (elapsedTime.inMilliseconds % 1000 ~/ 10).toString().padLeft(2, '0');
+
+    return '$hours$minutes$seconds.$milliseconds';
+  }
+
+  void _showVictoryDialog(elapsedTime) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Victoire !'),
-          content: Text('Félicitations, vous avez gagné !'),
-          actions: <Widget>[
+          title: const Text('Victoire!'),
+          content: Text(
+            "Temps écoulé: ${formatElapsedTime(elapsedTime)}",
+          ),
+          actions: [
             TextButton(
-              child: Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -137,7 +153,14 @@ class GameGridWidgetState extends State<GameGridWidget> {
                     Connection(liaison[0], liaison[1], liaison[2], liaison[3]))
                 .toList(),
           )) {
-            _showVictoryDialog();
+            Duration elapsedTime = TimerData.of(context).elapsedTime;
+            String elapsedTimeText =
+                '${elapsedTime.inMinutes.toString().padLeft(2, '0')}:${(elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}.${(elapsedTime.inMilliseconds % 1000 ~/ 10).toString().padLeft(2, '0')}';
+
+            _showVictoryDialog(elapsedTimeText);
+            if (widget.onMapSolved != null) {
+              widget.onMapSolved!();
+            }
           }
         });
       },
@@ -151,6 +174,7 @@ class GameGridWidgetState extends State<GameGridWidget> {
             painter: _GameGridPainter(
                 liaisons: liaisons, gameGrid: widget.gameMap.grid),
             child: GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: widget.gameMap.grid.width,
