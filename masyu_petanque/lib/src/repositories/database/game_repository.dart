@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
+
+import '../../models/game_grid.dart';
 
 class GameRepository {
   final FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;
@@ -258,5 +262,40 @@ class GameRepository {
     final userFavoriteMapsRef =
         _databaseReference.child('users/$userId/favorite_maps');
     await userFavoriteMapsRef.update({mapId: null});
+  }
+
+  Future<List<GameMap>> getAllMapsOnce() async {
+    DatabaseEvent event = await _databaseReference.child('maps').once();
+    final Map<dynamic, dynamic>? mapsData =
+        event.snapshot.value as Map<dynamic, dynamic>?;
+
+    if (kDebugMode) {
+      print("mapsData: $mapsData");
+    }
+
+    if (mapsData != null) {
+      return mapsData.entries.map<GameMap>((entry) {
+        final String key = entry.key.toString();
+        final Map<dynamic, dynamic> value = entry.value;
+        if (kDebugMode) {
+          print("Juste une map: $value");
+        }
+
+        final Map<String, dynamic> mapDataWithId = {
+          for (var k in value.keys) k.toString(): value[k],
+        };
+        mapDataWithId['id'] = key;
+        return GameMap.fromMap(mapDataWithId, key);
+      }).toList();
+    } else {
+      return [];
+    }
+  }
+
+  Stream<GameMap> getLocalMapStreamById(String mapId) {
+    return _databaseReference.child('maps/$mapId').onValue.map((event) {
+      final mapData = event.snapshot.value as Map<String, dynamic>;
+      return GameMap.fromMap(mapData, event.snapshot.key!);
+    });
   }
 }

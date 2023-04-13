@@ -3,6 +3,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../models/user.dart';
+
 class UserRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
@@ -43,14 +45,13 @@ class UserRepository {
 
             // Create a new user instance in the database
             final newUser = {
-              "favourites_maps": [],
+              "favorite_maps": [],
               "first_connection": DateTime.now().toIso8601String(),
               "first_name": user.displayName?.split(' ')[0],
               "last_connection": DateTime.now().toIso8601String(),
               "last_name": user.displayName!.split(' ').length > 1
                   ? user.displayName?.split(' ')[1]
-                  : '',
-              "played_maps": {}
+                  : ''
             };
 
             await _databaseReference.child('users/${user.uid}').set(newUser);
@@ -88,5 +89,26 @@ class UserRepository {
     }
     await _auth.signOut();
     await _googleSignIn.signOut();
+  }
+
+  Future<LocalUser?> getUser() async {
+    User? currentUser = getCurrentUser();
+    if (currentUser != null) {
+      String userId = currentUser.uid;
+      DatabaseReference userRef = _databaseReference.child('users/$userId');
+      DatabaseEvent event = await userRef.once();
+      if (kDebugMode) {
+        print(event.snapshot.value);
+      }
+      if (event.snapshot.value != null) {
+        final Map<dynamic, dynamic> userData = event.snapshot.value as Map;
+        final Map<String, dynamic> userDataFormatted =
+            userData.map<String, dynamic>(
+          (key, value) => MapEntry(key.toString(), value),
+        );
+        return LocalUser.fromMap(userDataFormatted, userId);
+      }
+    }
+    return null;
   }
 }

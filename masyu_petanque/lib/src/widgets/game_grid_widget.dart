@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/game_grid.dart';
 
 class GameGridWidget extends StatelessWidget {
-  final GameGrid gameGrid;
+  final GameMap gameMap;
 
-  const GameGridWidget({Key? key, required this.gameGrid}) : super(key: key);
+  const GameGridWidget({Key? key, required this.gameMap}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final width = gameGrid.width ?? 1; // Ajouter cette ligne
-    final height = gameGrid.height ?? 1; // Ajouter cette ligne
-    final blackPoints = gameGrid.blackPoints ?? []; // Ajouter cette ligne
-    final whitePoints = gameGrid.whitePoints ?? []; // Ajouter cette ligne
+    final width = gameMap.grid.width;
+    final height = gameMap.grid.height;
+
+    final blackPoints = gameMap.grid.blackPoints;
+    final whitePoints = gameMap.grid.whitePoints;
 
     return Center(
       child: Container(
@@ -27,15 +28,13 @@ class GameGridWidget extends StatelessWidget {
             crossAxisSpacing: 2,
           ),
           itemBuilder: (context, index) {
-            int x = index % gameGrid.width!;
-            int y = index ~/ gameGrid.width!;
+            int x = index % width;
+            int y = index ~/ width;
 
-            // Vérifiez si le point est noir ou blanc
-            if (gameGrid.blackPoints!
-                .any((point) => point[0] == x && point[1] == y)) {
+            if (blackPoints.any((point) => point.x == x && point.y == y)) {
               return const _GridPoint(color: Colors.black, size: 14);
-            } else if (gameGrid.whitePoints!
-                .any((point) => point[0] == x && point[1] == y)) {
+            } else if (whitePoints
+                .any((point) => point.x == x && point.y == y)) {
               return const _GridPoint(
                   color: Colors.white, borderColor: Colors.black, size: 14);
             } else {
