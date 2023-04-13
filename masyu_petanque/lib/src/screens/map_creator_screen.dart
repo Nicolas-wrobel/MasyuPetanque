@@ -50,34 +50,35 @@ class MapEditorScreen extends StatelessWidget {
   final TextEditingController widthController = TextEditingController();
   final TextEditingController heightController = TextEditingController();
 
-  @override
-  Widget build(BuildContext context) {
-    Future<void> _handleMapCreation() async {
-      if (heightController.text.trim().isEmpty ||
-          widthController.text.trim().isEmpty ||
-          mapNameController.text.trim().isEmpty) {
-        // Affichez un message d'erreur
-        await showAlertDialog(context, "Erreur", "Il y a des champs vides.");
-        return;
-      }
-
-      String mapId = await _gameRepository.createMap(
-        height: int.parse(heightController.text),
-        width: int.parse(widthController.text),
-        blackPoints: noir,
-        whitePoints: blanc,
-        name: mapNameController.text,
-      );
-
-      if (mapId.isNotEmpty) {
-        await showAlertDialog(
-            context, "Succès", "La carte a été créée avec succès.");
-      } else {
-        await showAlertDialog(
-            context, "Erreur", "La création de la carte a échoué.");
-      }
+  void _validateAndCreateMap(BuildContext context) {
+    if (heightController.text.trim().isEmpty ||
+        widthController.text.trim().isEmpty ||
+        mapNameController.text.trim().isEmpty) {
+      // Affichez un message d'erreur
+      showAlertDialog(context, "Erreur", "Il y a des champs vides.");
+      return;
     }
 
+    _gameRepository
+        .createMap(
+      height: int.parse(heightController.text),
+      width: int.parse(widthController.text),
+      blackPoints: noir,
+      whitePoints: blanc,
+      name: mapNameController.text,
+    )
+        .then((mapId) {
+      // Gérez le résultat, par exemple en affichant un message de succès ou en naviguant vers une autre page
+      if (mapId.isNotEmpty) {
+        showAlertDialog(context, "Succès", "La carte a été créée avec succès.");
+      } else {
+        showAlertDialog(context, "Erreur", "La création de la carte a échoué.");
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -199,7 +200,7 @@ class MapEditorScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Center(
               child: ElevatedButton(
-                onPressed: _handleMapCreation,
+                onPressed: () => _validateAndCreateMap(context),
                 child: const Text('Validate'),
               ),
             ),
