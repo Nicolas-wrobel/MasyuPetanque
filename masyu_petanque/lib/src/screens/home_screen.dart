@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
+import '../repositories/database/game_repository.dart';
 import '../widgets/burger_menu.dart';
-import '../widgets/carousel.dart';
+import 'package:masyu_petanque/src/widgets/carousel.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
-
-void main() {
-  runApp(const HomeScreen());
-}
 
 class HomeScreen extends StatelessWidget {
   final UserRepository _userRepository;
@@ -63,10 +60,13 @@ class FavoritesFilterProvider extends InheritedWidget {
 
 class MainScreen extends StatelessWidget {
   const MainScreen({Key? key}) : super(key: key);
-  
+
   // L'écran principal avec la barre d'applications et le burger menu
   @override
   Widget build(BuildContext context) {
+    final userRepository = UserRepository();
+    final gameRepository = GameRepository(userRepository: userRepository);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -89,7 +89,10 @@ class MainScreen extends StatelessWidget {
         ),
       ),
       drawer: const DrawerMenu(),
-      body: const CarouselWithFavorites(),
+      body: CarouselWithFavorites(
+        userRepository: userRepository,
+        gameRepository: gameRepository,
+      ),
     );
   }
 }
