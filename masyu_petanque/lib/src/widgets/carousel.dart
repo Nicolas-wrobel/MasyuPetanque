@@ -97,7 +97,8 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
                             SizedBox(
                               height: MediaQuery.of(context).size.height *
                                   0.4, // Ajustez cette valeur selon vos besoins
-                              child: GameGridWidget(gameMap: map),
+                              child:
+                                  GameGridWidget(gameMap: map, isPreview: true),
                             ),
                             const SizedBox(height: 10),
                             Text('Créateur: ${map.author}'),
