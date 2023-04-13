@@ -17,13 +17,17 @@ class StartupScreen extends StatelessWidget {
     return StartupScreen._(key: key, userRepository: userRepository);
   }
 
-  Future<bool> _isUserAuthenticated() async {
+  Future<String?> _isUserAuthenticated() async {
     User? currentUser = _userRepository.getCurrentUser();
     if (currentUser != null) {
-      return true;
+      return null;
     } else {
       User? user = await _userRepository.signInWithGoogle();
-      return user != null;
+      if (user != null) {
+        return null;
+      } else {
+        return "Sign in failed. Please try again.";
+      }
     }
   }
 
@@ -35,17 +39,12 @@ class StartupScreen extends StatelessWidget {
         child: SafeArea(
           child: Stack(
             children: [
-              Align(
+              const Align(
                 alignment: Alignment.topCenter,
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16.0),
                   child: Text(
                     'Masyu Game',
-                    style: GoogleFonts.robotoSlab(
-                      fontSize: 24,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
                   ),
                 ),
               ),
@@ -55,11 +54,22 @@ class StartupScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => FutureBuilder<bool>(
+                        builder: (context) => FutureBuilder<String?>(
                           future: _isUserAuthenticated(),
                           builder: (context, snapshot) {
-                            if (snapshot.hasData && snapshot.data == true) {
-                              return const HomeScreen();
+                            if (snapshot.connectionState ==
+                                ConnectionState.done) {
+                              if (snapshot.hasData && snapshot.data != null) {
+                                // Show an error message to the user
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(snapshot.data!),
+                                  ),
+                                );
+                                return const CircularProgressIndicator(); // Keep the loading indicator if authentication fails
+                              } else {
+                                return HomeScreen.create(key: key);
+                              }
                             } else {
                               return const CircularProgressIndicator();
                             }
@@ -68,13 +78,8 @@ class StartupScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: Text(
+                  child: const Text(
                     '[ JOUER ]',
-                    style: GoogleFonts.robotoSlab(
-                      fontSize: 18,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
                   ),
                 ),
               ),

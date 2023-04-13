@@ -39,10 +39,10 @@ class MainApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
         colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.black),
       ),
-      initialRoute: '/game',
+      initialRoute: '/home',
       routes: {
         '/startup': (context) => StartupScreen.create(),
-        '/home': (context) => const HomeScreen(),
+        '/home': (context) => HomeScreen.create(),
         '/game': (context) => const GameScreen(
               mapId: "map1_id",
             ),
