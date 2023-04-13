@@ -1,138 +1,138 @@
 import 'package:flutter/material.dart';
 import '../widgets/burger_menu.dart';
 
-class MapCreatorScreen extends StatelessWidget {
-  const MapCreatorScreen({super.key});
+class MapEditorScreen extends StatelessWidget {
+  const MapEditorScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Map Editor'),
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            );
-          },
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+        title: const Text(
+          'Map Editor',
+          style: TextStyle(color: Colors.black),
         ),
       ),
       drawer: const DrawerMenu(),
-      body: SingleChildScrollView(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: const [
-            MapNameAndDimensionForm(),
-            MapEditor(),
-            ValidateButton(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class MapNameAndDimensionForm extends StatelessWidget {
-  const MapNameAndDimensionForm({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'Map Name'),
+                const Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Map Name',
+                      labelStyle: TextStyle(color: Colors.black),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
                 ),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'Map Dimension'),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'L',
+                            labelStyle: TextStyle(color: Colors.black),
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const Text(' x '),
+                      Expanded(
+                        child: TextField(
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'H',
+                            labelStyle: TextStyle(color: Colors.black),
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                IconButton(
+                  icon: const Icon(Icons.save),
+                  onPressed: () {
+                    // Ajoutez votre logique pour le bouton enregistrer ici
+                  },
                 ),
               ],
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: () {
-              // Ajoutez votre logique d'enregistrement ici
-            },
-          ),
-        ],
+            const SizedBox(height: 16),
+            Expanded(
+              child: Container(
+                color: Colors.grey[200],
+                // Votre widget pour afficher la map ici
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.circle, color: Colors.black),
+                    onPressed: () {
+                      // Ajoutez votre logique pour le bouton rond noir ici
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.circle, color: Colors.white),
+                    onPressed: () {
+                      // Ajoutez votre logique pour le bouton rond blanc ici
+                    },
+                  ),
+                  IconButton(
+                    icon:
+                        const Icon(Icons.horizontal_rule, color: Colors.black),
+                    onPressed: () {
+                      // Ajoutez votre logique pour le bouton barre noire ici
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () {
+                      // Ajoutez votre logique pour le bouton gomme ici
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.undo),
+                    onPressed: () {
+                      // Ajoutez votre logique pour le bouton retour en arrière ici
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  // Ajoutez votre logique pour le bouton valider ic
+                },
+                child: const Text('Validate'),
+              ),
+            ),
+          ],
+        ),
       ),
-    );
-  }
-}
-
-class MapEditor extends StatelessWidget {
-  const MapEditor({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        // Ajoutez votre logique d'affichage de la map ici
-        );
-  }
-}
-
-class ValidateButton extends StatelessWidget {
-  const ValidateButton({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: ElevatedButton(
-        onPressed: () {
-          // Ajoutez votre logique de validation ici
-        },
-        child: const Text('Validate'),
-      ),
-    );
-  }
-}
-
-class MapEditorButtons extends StatelessWidget {
-  const MapEditorButtons({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        IconButton(
-          icon: const Icon(Icons.circle, color: Colors.black),
-          onPressed: () {
-            // Ajoutez votre logique pour le bouton rond noir ici
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.circle, color: Colors.white),
-          onPressed: () {
-            // Ajoutez votre logique pour le bouton rond blanc ici
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.horizontal_rule, color: Colors.black),
-          onPressed: () {
-            // Ajoutez votre logique pour le bouton barre noire ici
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.undo),
-          onPressed: () {
-            // Ajoutez votre logique pour le bouton gomme ici
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.undo),
-          onPressed: () {
-            // Ajoutez votre logique pour le bouton retour en arrière ici
-          },
-        ),
-      ],
     );
   }
 }
