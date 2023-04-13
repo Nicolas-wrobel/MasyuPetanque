@@ -1,11 +1,83 @@
 import 'package:flutter/material.dart';
+import '../repositories/authentication/user_repository.dart';
+import '../repositories/database/game_repository.dart';
 import '../widgets/burger_menu.dart';
+import 'dart:async';
+
+Future<void> showAlertDialog(
+    BuildContext context, String title, String content) {
+  final completer = Completer<void>();
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            child: const Text("OK"),
+            onPressed: () {
+              Navigator.of(context).pop();
+              completer.complete();
+            },
+          ),
+        ],
+      );
+    },
+  );
+
+  return completer.future;
+}
+
+List<Map<String, int>> blanc = [
+  {'x1': 1, 'y1': 1},
+  {'x2': 2, 'y2': 2},
+];
+
+List<Map<String, int>> noir = [
+  {'x1': 3, 'y1': 3},
+  {'x2': 4, 'y2': 4},
+];
 
 class MapEditorScreen extends StatelessWidget {
-  const MapEditorScreen({Key? key}) : super(key: key);
+  MapEditorScreen({Key? key}) : super(key: key);
+
+  final GameRepository _gameRepository =
+      GameRepository(userRepository: UserRepository());
+
+  final TextEditingController mapNameController = TextEditingController();
+  final TextEditingController widthController = TextEditingController();
+  final TextEditingController heightController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    Future<void> _handleMapCreation() async {
+      if (heightController.text.trim().isEmpty ||
+          widthController.text.trim().isEmpty ||
+          mapNameController.text.trim().isEmpty) {
+        // Affichez un message d'erreur
+        await showAlertDialog(context, "Erreur", "Il y a des champs vides.");
+        return;
+      }
+
+      String mapId = await _gameRepository.createMap(
+        height: int.parse(heightController.text),
+        width: int.parse(widthController.text),
+        blackPoints: noir,
+        whitePoints: blanc,
+        name: mapNameController.text,
+      );
+
+      if (mapId.isNotEmpty) {
+        await showAlertDialog(
+            context, "Succès", "La carte a été créée avec succès.");
+      } else {
+        await showAlertDialog(
+            context, "Erreur", "La création de la carte a échoué.");
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -24,9 +96,10 @@ class MapEditorScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: TextField(
-                    decoration: InputDecoration(
+                    controller: mapNameController,
+                    decoration: const InputDecoration(
                       labelText: 'Map Name',
                       labelStyle: TextStyle(color: Colors.black),
                       border: OutlineInputBorder(),
@@ -39,6 +112,7 @@ class MapEditorScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: TextField(
+                          controller: widthController,
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
                             labelText: 'L',
@@ -50,6 +124,7 @@ class MapEditorScreen extends StatelessWidget {
                       const Text(' x '),
                       Expanded(
                         child: TextField(
+                          controller: heightController,
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
                             labelText: 'H',
@@ -124,9 +199,7 @@ class MapEditorScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  // Ajoutez votre logique pour le bouton valider ic
-                },
+                onPressed: _handleMapCreation,
                 child: const Text('Validate'),
               ),
             ),
