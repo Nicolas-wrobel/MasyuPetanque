@@ -11,31 +11,82 @@ class GameGrid {
   final List<List>? whitePoints;
   final List<Map<String, dynamic>>? ranking;
 
-  GameGrid({
-    this.id,
-    this.name,
-    this.author,
-    this.creationDate,
-    this.width,
-    this.height,
-    this.blackPoints,
-    this.whitePoints,
+  GameMap({
+    required this.id,
+    required this.name,
+    required this.author,
+    required this.creationDate,
+    required this.grid,
+    required this.bestTime,
     this.ranking,
   });
 
-  static GameGrid fromMap(String id, Map<String, dynamic> map) {
-    return GameGrid(
-      id: id,
-      name: map['name'] ?? 'N/A',
-      author: map['author'] ?? 'N/A',
-      creationDate: map['creation_date'] ?? 'N/A',
-      width: map['dimensions']['width'] ?? 0,
-      height: map['dimensions']['height'] ?? 0,
-      blackPoints: _convertPoints(map['grid']['black_points'] as List),
-      whitePoints: _convertPoints(map['grid']['white_points'] as List),
-      ranking: _convertRanking(map['ranking'] as List),
+  factory GameMap.fromMap(Map<String, dynamic> map, String id) {
+    String id = map['id'] as String;
+    String name = map['name'] as String;
+    String author = map['author'] as String;
+    DateTime creationDate = DateTime.parse(map['creation_date'] as String);
+    GameGrid grid = GameGrid.fromMap(map['grid'] as Map<String, dynamic>);
+
+    List<GameRanking> ranking = [];
+    for (int i = 1; i < map['ranking'].length; i++) {
+      ranking.add(GameRanking.fromMap(map['ranking'][i]));
+    }
+
+    String bestTime = ranking[0].time;
+
+    return GameMap(
+        id: id,
+        name: name,
+        author: author,
+        creationDate: creationDate,
+        grid: grid,
+        ranking: ranking,
+        bestTime: bestTime);
+  }
+}
+
+class GameRanking {
+  final String userId;
+  final String time;
+
+  GameRanking({required this.userId, required this.time});
+
+  factory GameRanking.fromMap(Map<String, dynamic> map) {
+    return GameRanking(
+      userId: map['user_id'] as String,
+      time: map['time'] as String,
     );
   }
+}
+
+class GameGrid {
+  final int width;
+  final int height;
+  final List<Point> blackPoints;
+  final List<Point> whitePoints;
+
+  GameGrid(
+      {required this.width,
+      required this.height,
+      required this.blackPoints,
+      required this.whitePoints});
+
+  factory GameGrid.fromMap(Map<String, dynamic> map) {
+    int width = map['dimensions']['width'] as int;
+    int height = map['dimensions']['height'] as int;
+
+    List<Point> blackPoints = [];
+    for (int i = 1; i < map['black_points'].length; i++) {
+      blackPoints.add(Point(
+          x: map['black_points'][i]['x'], y: map['black_points'][i]['y']));
+    }
+
+    List<Point> whitePoints = [];
+    for (int i = 1; i < map['white_points'].length; i++) {
+      whitePoints.add(Point(
+          x: map['white_points'][i]['x'], y: map['white_points'][i]['y']));
+    }
 
   static List<List<dynamic>> _convertPoints(List<dynamic> points) {
     return List.castFrom<dynamic, List<dynamic>>(points
@@ -43,6 +94,13 @@ class GameGrid {
         .where((point) => point != null)
         .toList());
   }
+}
+
+class Point {
+  final int x;
+  final int y;
+
+  Point({required this.x, required this.y});
 
   static List<Map<String, dynamic>> _convertRanking(List<dynamic> ranking) {
     return ranking.map((entry) {
@@ -70,7 +128,7 @@ class GameGridList {
   void addGameGridListFromMap(List<Map<String, dynamic>> mapList) {
     gameGrids.clear();
     for (var map in mapList) {
-      gameGrids.add(GameGrid.fromMap(map['id'], map));
+      gameGrids.add(GameGrid.fromMap(map));
     }
   }
 }
