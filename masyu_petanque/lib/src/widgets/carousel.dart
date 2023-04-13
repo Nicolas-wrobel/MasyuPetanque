@@ -1,4 +1,4 @@
-// import 'dart:async';
+import 'dart:async';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/foundation.dart';
@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/user.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
 
-// import '../models/game_grid.dart';
-// import '../repositories/database/game_repository.dart';
-// import '../screens/home_screen.dart';
-// import 'game_grid_widget.dart';
+import '../models/game_grid.dart';
+import '../repositories/database/game_repository.dart';
+import '../screens/home_screen.dart';
+import 'game_grid_widget.dart';
 
 class CarouselWithFavorites extends StatefulWidget {
   final UserRepository userRepository;
@@ -21,9 +21,9 @@ class CarouselWithFavorites extends StatefulWidget {
     required this.gameRepository,
   }) : super(key: key);
 
-//   @override
-//   _CarouselWithFavoritesState createState() => _CarouselWithFavoritesState();
-// }
+  @override
+  _CarouselWithFavoritesState createState() => _CarouselWithFavoritesState();
+}
 
 class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
   List<GameMap> mapData = [];
