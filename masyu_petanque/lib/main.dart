@@ -37,7 +37,10 @@ class MainApp extends StatelessWidget {
       case '/home':
         return MaterialPageRoute(builder: (_) => HomeScreen.create());
       case '/game':
-        return MaterialPageRoute(builder: (_) => const GameScreen());
+        return MaterialPageRoute(
+            builder: (_) => const GameScreen(
+                  mapId: "map1_id",
+                ));
       case '/map_creator':
         return MaterialPageRoute(builder: (_) => const MapCreatorScreen());
       case '/profile':
