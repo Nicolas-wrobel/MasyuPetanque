@@ -43,17 +43,9 @@ Future<void> showAlertDialog(
   return completer.future;
 }
 
-List<Map<String, int>> blanc = [
-  {},
-  {'x': 1, 'y': 1},
-  {'x': 2, 'y': 2},
-];
+List<Map<String, int>> blanc = [{}];
 
-List<Map<String, int>> noir = [
-  {},
-  {'x': 3, 'y': 3},
-  {'x': 4, 'y': 4},
-];
+List<Map<String, int>> noir = [{}];
 
 class MapCreatorScreen extends StatefulWidget {
   MapCreatorScreen({Key? key}) : super(key: key);
@@ -76,9 +68,13 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
   final GameRepository _gameRepository =
       GameRepository(userRepository: UserRepository());
 
-  final TextEditingController mapNameController = TextEditingController();
-  final TextEditingController widthController = TextEditingController();
-  final TextEditingController heightController = TextEditingController();
+  final TextEditingController mapNameController =
+      TextEditingController(text: "Map");
+
+  final TextEditingController widthController =
+      TextEditingController(text: "6");
+  final TextEditingController heightController =
+      TextEditingController(text: "6");
 
   void _validateAndCreateMap(BuildContext context, GameMap gamemap) {
     if (heightController.text.trim().isEmpty ||
@@ -87,6 +83,14 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
       // Affichez un message d'erreur
       showAlertDialog(context, "Erreur", "Il y a des champs vides.");
       return;
+    }
+
+    for (Point p in gameMap.getGrid.blackPoints) {
+      noir.add(<String, int>{'x': p.x, 'y': p.y});
+    }
+
+    for (Point p in gameMap.getGrid.whitePoints) {
+      blanc.add(<String, int>{'x': p.x, 'y': p.y});
     }
 
     _gameRepository
@@ -189,9 +193,9 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
                       creationDate: DateTime.now(),
                       grid: GameGrid(
                           blackPoints: gameMap.getGrid.blackPoints,
-                          whitePoints: gameMap.getGrid.blackPoints,
-                          width: gameMap.getGrid.width,
-                          height: gameMap.getGrid.height),
+                          whitePoints: gameMap.getGrid.whitePoints,
+                          width: int.parse(widthController.text),
+                          height: int.parse(heightController.text)),
                       id: '',
                       name: '',
                     ),
