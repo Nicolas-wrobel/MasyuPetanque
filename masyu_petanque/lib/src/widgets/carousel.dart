@@ -27,6 +27,8 @@ class CarouselWithFavorites extends StatefulWidget {
 
 class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
   List<GameMap> mapData = [];
+  GameRepository gameRepository =
+      GameRepository(userRepository: UserRepository());
   LocalUser? user;
 
   @override
@@ -121,8 +123,11 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
                               onPressed: () {
                                 setState(() {
                                   if (favorites.contains(map.id)) {
+                                    gameRepository
+                                        .removeMapFromFavorites(map.id);
                                     favorites.remove(map.id);
                                   } else {
+                                    gameRepository.addMapToFavorites(map.id);
                                     favorites.add(map.id);
                                   }
                                 });

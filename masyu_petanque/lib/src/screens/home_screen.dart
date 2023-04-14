@@ -88,7 +88,9 @@ class MainScreen extends StatelessWidget {
           },
         ),
       ),
-      drawer: const DrawerMenu(),
+      drawer: DrawerMenu(
+        userRepository: userRepository,
+      ),
       body: CarouselWithFavorites(
         userRepository: userRepository,
         gameRepository: gameRepository,

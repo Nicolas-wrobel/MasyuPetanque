@@ -30,6 +30,23 @@ void main() async {
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
+  Route<dynamic> _onGenerateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/startup':
+        return MaterialPageRoute(builder: (_) => StartupScreen.create());
+      case '/home':
+        return MaterialPageRoute(builder: (_) => HomeScreen.create());
+      case '/game':
+        return MaterialPageRoute(builder: (_) => const GameScreen());
+      case '/map_creator':
+        return MaterialPageRoute(builder: (_) => const MapCreatorScreen());
+      case '/profile':
+        return MaterialPageRoute(builder: (_) => const ProfileScreen());
+      default:
+        return MaterialPageRoute(builder: (_) => StartupScreen.create());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -39,16 +56,8 @@ class MainApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
         colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.black),
       ),
-      initialRoute: '/game',
-      routes: {
-        '/startup': (context) => StartupScreen.create(),
-        '/home': (context) => HomeScreen.create(),
-        '/game': (context) => const GameScreen(
-              mapId: "map1_id",
-            ),
-        '/map_creator': (context) => const MapCreatorScreen(),
-        '/profile': (context) => const ProfileScreen(),
-      },
+      initialRoute: '/startup',
+      onGenerateRoute: _onGenerateRoute,
     );
   }
 }
