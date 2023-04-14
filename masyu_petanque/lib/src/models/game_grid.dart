@@ -4,8 +4,8 @@ class GameMap {
   final String author;
   final DateTime creationDate;
   final GameGrid grid;
-  final List<GameRanking>? ranking;
-  final String? bestTime;
+  late final List<GameRanking>? ranking;
+  late final String? bestTime;
 
   GameMap({
     required this.id,
@@ -16,6 +16,17 @@ class GameMap {
     this.bestTime,
     this.ranking,
   });
+
+  String get getId => id;
+  String get getName => name;
+  String get getAuthor => author;
+  DateTime get getCreationDate => creationDate;
+  GameGrid get getGrid => grid;
+  List<GameRanking>? get getRanking => ranking;
+  String? get getBestTime => bestTime;
+
+  set setRanking(List<GameRanking>? ranking) => this.ranking = ranking;
+  set setBestTime(String? bestTime) => this.bestTime = bestTime;
 
   factory GameMap.fromMap(Map<String, dynamic> map, String id) {
     print(map);

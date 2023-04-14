@@ -186,6 +186,7 @@ class GameGridWidgetState extends State<GameGridWidget> {
             }
           }
         });
+
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (isVictory(
             widget.gameMap.grid.blackPoints,
