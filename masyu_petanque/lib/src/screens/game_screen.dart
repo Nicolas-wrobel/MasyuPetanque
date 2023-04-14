@@ -3,75 +3,33 @@ import 'package:masyu_petanque/src/models/game_grid.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
 import 'package:masyu_petanque/src/repositories/database/game_repository.dart';
 import 'package:masyu_petanque/src/widgets/game_grid_widget.dart';
+import 'package:provider/provider.dart';
+import 'package:masyu_petanque/src/models/timer_model.dart';
 
-class TimerData extends InheritedWidget {
-  final Duration elapsedTime;
-
-  const TimerData({
-    Key? key,
-    required this.elapsedTime,
-    required Widget child,
-  }) : super(key: key, child: child);
-
-  static TimerData of(BuildContext context) {
-    final TimerData? result =
-        context.dependOnInheritedWidgetOfExactType<TimerData>();
-    assert(result != null, 'No TimerData found in context');
-    return result!;
-  }
-
-  @override
-  bool updateShouldNotify(TimerData old) => elapsedTime != old.elapsedTime;
-}
-
-class GameScreen extends StatefulWidget {
+class GameScreen extends StatelessWidget {
   final String mapId;
 
   const GameScreen({Key? key, required this.mapId}) : super(key: key);
-
-  @override
-  _GameScreenState createState() => _GameScreenState();
-}
-
-class _GameScreenState extends State<GameScreen> {
-  final GlobalKey<_TimerTextState> timerTextStateKey =
-      GlobalKey<_TimerTextState>();
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
     final userRepository = UserRepository();
     final gameRepository = GameRepository(userRepository: userRepository);
     final mapStream =
-        gameRepository.getMapStreamById(widget.mapId).asBroadcastStream();
+        gameRepository.getMapStreamById(mapId).asBroadcastStream();
 
-    // Créez une instance de TimerText avec la clé timerTextStateKey
-    TimerText timerTextWidget = TimerText(key: timerTextStateKey);
-
-    // Utilisez timerTextWidget pour créer une instance de TimerData
-    TimerData _timerData = TimerData(
-      elapsedTime: timerTextStateKey.currentState!.getElapsedTime(),
-      child: timerTextWidget,
-    );
-
-    return TimerData(
-        elapsedTime: timerTextStateKey.currentState!.getElapsedTime(),
+    return ChangeNotifierProvider(
+        create: (context) => TimerModel(),
         child: Scaffold(
           body: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _timerData,
               StreamBuilder<Map<String, dynamic>>(
                 stream: mapStream,
                 builder: (BuildContext context,
                     AsyncSnapshot<Map<String, dynamic>> snapshot) {
                   if (snapshot.hasData) {
-                    GameMap gameGrid =
-                        GameMap.fromMap(snapshot.data!, widget.mapId);
+                    GameMap gameGrid = GameMap.fromMap(snapshot.data!, mapId);
 
                     final GlobalKey<GameGridWidgetState> gameGridWidgetKey =
                         GlobalKey<GameGridWidgetState>();
@@ -79,10 +37,9 @@ class _GameScreenState extends State<GameScreen> {
                     GameGridWidget gameGridWidget = GameGridWidget(
                       key: gameGridWidgetKey,
                       gameMap: gameGrid,
-                      onMapSolved: () {
-                        timerTextStateKey.currentState!.stopTimer();
-                      },
                     );
+
+                    TimerText timerTextWidget = const TimerText();
 
                     return Column(
                       children: [
@@ -103,16 +60,13 @@ class _GameScreenState extends State<GameScreen> {
                             ],
                           ),
                         ),
+                        timerTextWidget,
                         Padding(
                           padding: const EdgeInsets.all(16),
-                          child: TimerData(
-                            elapsedTime: timerTextStateKey.currentState!
-                                .getElapsedTime(),
-                            child: AspectRatio(
-                              aspectRatio:
-                                  gameGrid.grid.width / gameGrid.grid.height,
-                              child: gameGridWidget,
-                            ),
+                          child: AspectRatio(
+                            aspectRatio:
+                                gameGrid.grid.width / gameGrid.grid.height,
+                            child: gameGridWidget,
                           ),
                         ),
                         Padding(
@@ -145,9 +99,8 @@ class _GameScreenState extends State<GameScreen> {
                                     },
                                   );
                                   if (resetGame != null && resetGame) {
-                                    timerTextStateKey.currentState!
-                                        .resetTimer();
-                                    gameGridWidgetKey.currentState!.clear();
+                                    gameGridWidgetKey.currentState!
+                                        .restartTimer();
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
@@ -197,54 +150,13 @@ class _GameScreenState extends State<GameScreen> {
   }
 }
 
-class TimerText extends StatefulWidget {
+class TimerText extends StatelessWidget {
   const TimerText({Key? key}) : super(key: key);
 
   @override
-  _TimerTextState createState() => _TimerTextState();
-}
-
-class _TimerTextState extends State<TimerText> with TickerProviderStateMixin {
-  late AnimationController _timerController;
-  ValueNotifier<Duration> elapsedTime = ValueNotifier(Duration.zero);
-
-  @override
-  void initState() {
-    super.initState();
-
-    _timerController = AnimationController(
-      vsync: this,
-      duration: const Duration(hours: 1),
-    );
-
-    _timerController.forward();
-  }
-
-  void stopTimer() {
-    setState(() {
-      _timerController.stop();
-    });
-  }
-
-  @override
-  void dispose() {
-    _timerController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _timerController,
-      builder: (BuildContext context, Widget? child) {
-        elapsedTime.value = _timerController.duration! * _timerController.value;
-
-        int minutes = elapsedTime.value.inMinutes;
-        int seconds = elapsedTime.value.inSeconds % 60;
-        int milliseconds = elapsedTime.value.inMilliseconds % 1000 ~/ 10;
-
-        String timerText =
-            '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}.${milliseconds.toString().padLeft(2, '0')}';
+    return Consumer<TimerModel>(
+      builder: (BuildContext context, TimerModel timerModel, Widget? child) {
         return Container(
           decoration: BoxDecoration(
             border: Border.all(
@@ -253,20 +165,10 @@ class _TimerTextState extends State<TimerText> with TickerProviderStateMixin {
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          child: Text(timerText, style: const TextStyle(fontSize: 24)),
+          child: Text(timerModel.elapsedTime,
+              style: const TextStyle(fontSize: 24)),
         );
       },
     );
-  }
-
-  void resetTimer() {
-    setState(() {
-      _timerController.reset();
-      _timerController.forward();
-    });
-  }
-
-  Duration getElapsedTime() {
-    return _timerController.duration! * _timerController.value;
   }
 }

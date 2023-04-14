@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/game_grid.dart';
-import 'package:masyu_petanque/src/screens/game_screen.dart';
+import 'package:masyu_petanque/src/models/timer_model.dart';
 import 'package:masyu_petanque/src/utils/game_checker.dart';
+import 'package:provider/provider.dart';
 
 class GameGridWidget extends StatefulWidget {
   final GameMap gameMap;
-  final VoidCallback? onMapSolved;
   final bool isPreview;
 
   const GameGridWidget(
-      {Key? key,
-      required this.gameMap,
-      this.onMapSolved,
-      this.isPreview = false})
+      {required this.gameMap, this.isPreview = false, Key? key})
       : super(key: key);
 
   @override
@@ -21,6 +18,33 @@ class GameGridWidget extends StatefulWidget {
 
 class GameGridWidgetState extends State<GameGridWidget> {
   final List<List<int>> liaisons = [];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<TimerModel>(context, listen: false).start();
+    });
+  }
+
+  void startTimer() {
+    Provider.of<TimerModel>(context, listen: false).start();
+  }
+
+  void stopTimer() {
+    Provider.of<TimerModel>(context, listen: false).stop();
+  }
+
+  void resetTimer() {
+    Provider.of<TimerModel>(context, listen: false).reset();
+  }
+
+  void restartTimer() {
+    stopTimer();
+    resetTimer();
+    clear();
+    Provider.of<TimerModel>(context, listen: false).start();
+  }
 
   void undo() {
     setState(() {
@@ -36,30 +60,38 @@ class GameGridWidgetState extends State<GameGridWidget> {
     });
   }
 
-  String formatElapsedTime(Duration elapsedTime) {
-    String hours = elapsedTime.inHours > 0 ? '${elapsedTime.inHours}:' : '';
-    String minutes =
-        '${elapsedTime.inMinutes.remainder(60).toString().padLeft(2, '0')}:';
-    String seconds = (elapsedTime.inSeconds % 60).toString().padLeft(2, '0');
-    String milliseconds =
-        (elapsedTime.inMilliseconds % 1000 ~/ 10).toString().padLeft(2, '0');
+  void _showVictoryDialog() {
+    stopTimer();
+    String elapsedTimeStr =
+        Provider.of<TimerModel>(context, listen: false).elapsedTime;
+    List<String> timeParts = elapsedTimeStr.split(':');
+    int minutes = int.parse(timeParts[0]);
+    List<String> secondsAndCentiseconds = timeParts[1].split('.');
+    int seconds = int.parse(secondsAndCentiseconds[0]);
+    int centiseconds = int.parse(secondsAndCentiseconds[1]);
 
-    return '$hours$minutes$seconds.$milliseconds';
-  }
-
-  void _showVictoryDialog(elapsedTime) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Victoire!'),
+          title: Text('Victoire !'),
           content: Text(
-            "Temps écoulé: ${formatElapsedTime(elapsedTime)}",
-          ),
-          actions: [
+              'Félicitations, vous avez gagné ! Temps écoulé : ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}.${centiseconds.toString().padLeft(2, '0')}'),
+          actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+              child: Text('Quitter'),
+              onPressed: () {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+            ),
+            TextButton(
+              child: Text('Rejouer'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                resetTimer();
+                clear();
+                startTimer();
+              },
             ),
           ],
         );
@@ -153,14 +185,7 @@ class GameGridWidgetState extends State<GameGridWidget> {
                     Connection(liaison[0], liaison[1], liaison[2], liaison[3]))
                 .toList(),
           )) {
-            Duration elapsedTime = TimerData.of(context).elapsedTime;
-            String elapsedTimeText =
-                '${elapsedTime.inMinutes.toString().padLeft(2, '0')}:${(elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}.${(elapsedTime.inMilliseconds % 1000 ~/ 10).toString().padLeft(2, '0')}';
-
-            _showVictoryDialog(elapsedTimeText);
-            if (widget.onMapSolved != null) {
-              widget.onMapSolved!();
-            }
+            _showVictoryDialog();
           }
         });
       },
@@ -174,7 +199,6 @@ class GameGridWidgetState extends State<GameGridWidget> {
             painter: _GameGridPainter(
                 liaisons: liaisons, gameGrid: widget.gameMap.grid),
             child: GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: widget.gameMap.grid.width,
