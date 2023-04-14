@@ -125,7 +125,9 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
           style: TextStyle(color: Colors.black),
         ),
       ),
-      drawer: const DrawerMenu(),
+      drawer: DrawerMenu(
+        userRepository: userRepository,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

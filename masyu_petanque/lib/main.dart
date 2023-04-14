@@ -42,7 +42,7 @@ class MainApp extends StatelessWidget {
                   mapId: "map1_id",
                 ));
       case '/map_creator':
-        return MaterialPageRoute(builder: (_) => const MapCreatorScreen());
+        return MaterialPageRoute(builder: (_) => MapCreatorScreen());
       case '/profile':
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
       default:
