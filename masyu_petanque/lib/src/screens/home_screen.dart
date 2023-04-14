@@ -17,23 +17,12 @@ class HomeScreen extends StatelessWidget {
     return HomeScreen._(key: key, userRepository: userRepository);
   }
 
-  // MaterialApp qui définit le thème et le widget principal de l'application
+  // MaterialApp a été supprimé
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Masyu',
-      theme: ThemeData(
-        primarySwatch: Colors.grey,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0,
-        ),
-      ),
-      home: FavoritesFilterProvider(
-        favoritesFilterNotifier: ValueNotifier(false),
-        child: const MainScreen(),
-      ),
+    return FavoritesFilterProvider(
+      favoritesFilterNotifier: ValueNotifier(false),
+      child: const MainScreen(),
     );
   }
 }
