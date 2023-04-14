@@ -22,7 +22,8 @@ class DrawerMenu extends StatelessWidget {
             leading: const Icon(Icons.edit),
             title: const Text('Edit'),
             onTap: () {
-              // Add navigation logic here
+              Navigator.pushNamed(context, '/map_creator');
+              Navigator.pop(context); // Ferme le tiroir du menu
             },
           ),
           ListTile(

@@ -28,7 +28,7 @@ void main() async {
 }
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  const MainApp({Key? key}) : super(key: key);
 
   Route<dynamic> _onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -54,6 +54,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Masyu Game',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: Colors.black,
         visualDensity: VisualDensity.adaptivePlatformDensity,
