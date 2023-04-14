@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/user.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
 
+import 'package:masyu_petanque/src/screens/game_screen.dart';
 import '../models/game_grid.dart';
 import '../repositories/database/game_repository.dart';
 import '../screens/home_screen.dart';
@@ -103,10 +104,25 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
                                 )),
                             const SizedBox(height: 10),
                             SizedBox(
-                              height: MediaQuery.of(context).size.height *
-                                  0.4, // Ajustez cette valeur selon vos besoins
-                              child:
-                                  GameGridWidget(gameMap: map, isPreview: true),
+                              height: MediaQuery.of(context).size.height * 0.4,
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => GameScreen(
+                                        mapId: map.id,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: SizedBox(
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.4,
+                                  child: GameGridWidget(
+                                      gameMap: map, isPreview: true),
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 10),
                             Text('Créateur: ${map.author}'),

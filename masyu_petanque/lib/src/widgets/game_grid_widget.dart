@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/game_grid.dart';
 import 'package:masyu_petanque/src/models/timer_model.dart';
+import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
+import 'package:masyu_petanque/src/repositories/database/game_repository.dart';
 import 'package:masyu_petanque/src/utils/game_checker.dart';
 import 'package:provider/provider.dart';
 
@@ -61,6 +63,8 @@ class GameGridWidgetState extends State<GameGridWidget> {
   }
 
   void _showVictoryDialog() {
+    final userRepository = UserRepository();
+    final gameRepository = GameRepository(userRepository: userRepository);
     stopTimer();
     String elapsedTimeStr =
         Provider.of<TimerModel>(context, listen: false).elapsedTime;
@@ -69,7 +73,13 @@ class GameGridWidgetState extends State<GameGridWidget> {
     List<String> secondsAndCentiseconds = timeParts[1].split('.');
     int seconds = int.parse(secondsAndCentiseconds[0]);
     int centiseconds = int.parse(secondsAndCentiseconds[1]);
+    int totalTimeInCentiseconds =
+        (minutes * 60 * 100) + (seconds * 100) + centiseconds;
 
+    gameRepository.saveAGamePlayedByAUser(
+      mapId: widget.gameMap.id,
+      timer: totalTimeInCentiseconds,
+    );
     showDialog(
       context: context,
       builder: (BuildContext context) {
