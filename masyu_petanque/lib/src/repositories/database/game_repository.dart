@@ -5,7 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
 
-import '../../models/game_grid.dart';
+import 'package:masyu_petanque/src/models/game_grid.dart';
 
 class GameRepository {
   final FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;

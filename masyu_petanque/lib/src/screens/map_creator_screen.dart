@@ -195,25 +195,31 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            // Grille de l'éditeur de carte
-            Expanded(
-              child: Container(
-                  color: Colors.grey[200],
-                  child: GameGridWidgetEditor(
-                    gameMap: GameMap(
-                      author: gameMap.getAuthor,
-                      creationDate: DateTime.now(),
-                      grid: GameGrid(
-                          blackPoints: gameMap.getGrid.blackPoints,
-                          whitePoints: gameMap.getGrid.whitePoints,
-                          width: int.parse(widthController.text),
-                          height: int.parse(heightController.text)),
-                      id: '',
-                      name: '',
-                    ),
-                    tool: currentToolMode,
-                    onVictoryStateChanged: _onVictoryStateChanged,
-                  )),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.425,
+              // Grille de l'éditeur de carte
+              child: Expanded(
+                child: AspectRatio(
+                  aspectRatio: gameMap.grid.width / gameMap.grid.height,
+                  child: Container(
+                      color: Colors.grey[200],
+                      child: GameGridWidgetEditor(
+                        gameMap: GameMap(
+                          author: gameMap.getAuthor,
+                          creationDate: DateTime.now(),
+                          grid: GameGrid(
+                              blackPoints: gameMap.getGrid.blackPoints,
+                              whitePoints: gameMap.getGrid.whitePoints,
+                              width: int.parse(widthController.text),
+                              height: int.parse(heightController.text)),
+                          id: '',
+                          name: '',
+                        ),
+                        tool: currentToolMode,
+                        onVictoryStateChanged: _onVictoryStateChanged,
+                      )),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             // Barre d'outils pour l'édition de la carte
