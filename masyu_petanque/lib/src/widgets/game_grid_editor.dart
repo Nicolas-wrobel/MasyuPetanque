@@ -3,15 +3,18 @@ import 'package:masyu_petanque/src/models/game_grid.dart';
 import 'package:masyu_petanque/src/screens/map_creator_screen.dart';
 import 'package:masyu_petanque/src/utils/game_checker.dart';
 
+// Le widget d'édition de la grille de jeu
 class GameGridWidgetEditor extends StatefulWidget {
   final GameMap gameMap;
   final bool isPreview;
   final ToolMode tool;
+  final ValueChanged<bool> onVictoryStateChanged;
 
   const GameGridWidgetEditor(
       {required this.gameMap,
       this.isPreview = false,
       required this.tool,
+      required this.onVictoryStateChanged,
       Key? key})
       : super(key: key);
 
@@ -22,6 +25,7 @@ class GameGridWidgetEditor extends StatefulWidget {
 class GameGridWidgetState extends State<GameGridWidgetEditor> {
   final List<List<int>> liaisons = [];
 
+  // Annuler la dernière action
   void undo() {
     setState(() {
       if (liaisons.isNotEmpty) {
@@ -30,24 +34,28 @@ class GameGridWidgetState extends State<GameGridWidgetEditor> {
     });
   }
 
+  // Effacer toutes les liaisons
   void clear() {
     setState(() {
       liaisons.clear();
     });
   }
 
+  // Ajouter un cercle noir
   void _handleAddBlackCircle(int x, int y) {
     setState(() {
       widget.gameMap.grid.blackPoints.add(Point(x: x, y: y));
     });
   }
 
+  // Ajouter un cercle blanc
   void _handleAddWhiteCircle(int x, int y) {
     setState(() {
       widget.gameMap.grid.whitePoints.add(Point(x: x, y: y));
     });
   }
 
+  // Ajouter une ligne noire entre deux points
   void _handleAddBlackLine(int x1, int y1, int x2, int y2, double relativeX,
       double relativeY, double cellWidth, double cellHeight) {
     setState(() {
@@ -55,55 +63,72 @@ class GameGridWidgetState extends State<GameGridWidgetEditor> {
       if ((relativeX < cellWidth / 4 && x1 > 0) ||
           (relativeX > cellWidth * 3 / 4 &&
               x1 < widget.gameMap.grid.width - 1)) {
-        x2 = relativeX < cellWidth / 4 ? x1 - 1 : x1 + 1;
+        setState(() {
+          x2 = relativeX < cellWidth / 4 ? x1 - 1 : x1 + 1;
+        });
       } else if ((relativeY < cellHeight / 4 && y1 > 0) ||
           (relativeY > cellHeight * 3 / 4 &&
               y1 < widget.gameMap.grid.height - 1)) {
-        y2 = relativeY < cellHeight / 4 ? y1 - 1 : y1 + 1;
+        setState(() {
+          y2 = relativeY < cellHeight / 4 ? y1 - 1 : y1 + 1;
+        });
       } else {
         // Gestion des cas aux bords de la grille pour les traits verticaux
         if (x1 == 0 && relativeX < cellWidth / 4) {
-          x2 = x1 + 1;
+          setState(() {
+            x2 = x1 + 1;
+          });
         } else if (x1 == widget.gameMap.grid.width - 1 &&
             relativeX > cellWidth * 3 / 4) {
-          x2 = x1 - 1;
+          setState(() {
+            x2 = x1 - 1;
+          });
         }
       }
 
       // Ajoutez les coordonnées des deux cases à la liste des liaisons.
 
       // Vérifiez si la liaison existe déjà
-      int index = liaisons.indexWhere((liaison) =>
-          (liaison[0] == x1 &&
-              liaison[1] == y1 &&
-              liaison[2] == x2 &&
-              liaison[3] == y2) ||
-          (liaison[0] == x2 &&
-              liaison[1] == y2 &&
-              liaison[2] == x1 &&
-              liaison[3] == y1));
+      setState(() {
+        int index = liaisons.indexWhere((liaison) =>
+            (liaison[0] == x1 &&
+                liaison[1] == y1 &&
+                liaison[2] == x2 &&
+                liaison[3] == y2) ||
+            (liaison[0] == x2 &&
+                liaison[1] == y2 &&
+                liaison[2] == x1 &&
+                liaison[3] == y1));
 
-      if (index != -1) {
-        liaisons.removeAt(index);
-        // print('Liaison supprimée: [$x1, $y1, $x2, $y2]');
-      } else {
-        if ((x1 == x2 && (y1 == y2 + 1 || y1 == y2 - 1)) ||
-            (y1 == y2 && (x1 == x2 + 1 || x1 == x2 - 1))) {
-          if (x1 > x2 || (x1 == x2 && y1 > y2)) {
-            int tempX = x1;
-            int tempY = y1;
-            x1 = x2;
-            y1 = y2;
-            x2 = tempX;
-            y2 = tempY;
+        if (index != -1) {
+          setState(() {
+            liaisons.removeAt(index);
+          });
+          // print('Liaison supprimée: [$x1, $y1, $x2, $y2]');
+        } else {
+          if ((x1 == x2 && (y1 == y2 + 1 || y1 == y2 - 1)) ||
+              (y1 == y2 && (x1 == x2 + 1 || x1 == x2 - 1))) {
+            if (x1 > x2 || (x1 == x2 && y1 > y2)) {
+              setState(() {
+                int tempX = x1;
+                int tempY = y1;
+                x1 = x2;
+                y1 = y2;
+                x2 = tempX;
+                y2 = tempY;
+              });
+            }
+            setState(() {
+              liaisons.add([x1, y1, x2, y2]);
+            });
+            // print('Liaison ajoutée: [$x1, $y1, $x2, $y2]');
           }
-          liaisons.add([x1, y1, x2, y2]);
-          // print('Liaison ajoutée: [$x1, $y1, $x2, $y2]');
         }
-      }
+      });
     });
   }
 
+  // Effacer un élément (cercle ou ligne)
   void _handleEraseItem(int x1, int y1) {
     setState(() {
       widget.gameMap.grid.blackPoints
@@ -118,10 +143,7 @@ class GameGridWidgetState extends State<GameGridWidgetEditor> {
     });
   }
 
-  void _handleUndoAction() {
-    // Votre logique pour annuler une action
-  }
-
+  // Construire le widget principal
   @override
   Widget build(BuildContext context) {
     return Listener(
@@ -153,22 +175,18 @@ class GameGridWidgetState extends State<GameGridWidgetEditor> {
             case ToolMode.eraseItem:
               _handleEraseItem(x1, y1);
               break;
-            case ToolMode.undoAction:
-              _handleUndoAction();
-              break;
           }
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (isVictory(
+            bool isVictorious = isVictory(
               widget.gameMap.grid.blackPoints,
               widget.gameMap.grid.whitePoints,
               liaisons
                   .map((liaison) => Connection(
                       liaison[0], liaison[1], liaison[2], liaison[3]))
                   .toList(),
-            )) {
-              //Dévérouiller le bouton validé
-            }
+            );
+            widget.onVictoryStateChanged(isVictorious);
           });
         },
         child: Center(

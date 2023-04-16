@@ -12,11 +12,11 @@ enum ToolMode {
   addWhiteCircle,
   addBlackLine,
   eraseItem,
-  undoAction
 }
 
 ToolMode currentToolMode = ToolMode.addBlackCircle;
 
+// Affiche une boîte de dialogue avec un titre et un contenu
 Future<void> showAlertDialog(
     BuildContext context, String title, String content) {
   final completer = Completer<void>();
@@ -44,9 +44,9 @@ Future<void> showAlertDialog(
 }
 
 List<Map<String, int>> blanc = [{}];
-
 List<Map<String, int>> noir = [{}];
 
+// Écran du créateur de carte
 class MapCreatorScreen extends StatefulWidget {
   MapCreatorScreen({Key? key}) : super(key: key);
 
@@ -56,10 +56,19 @@ class MapCreatorScreen extends StatefulWidget {
 
 class _MapCreatorScreenState extends State<MapCreatorScreen> {
   List<String> previousActions = [];
+  bool _isVictorious = false;
+
+  // Met à jour l'état de victoire
+  void _onVictoryStateChanged(bool isVictorious) {
+    setState(() {
+      _isVictorious = isVictorious;
+    });
+  }
 
   GameMap gameMap = GameMap(
     author: "",
-    creationDate: DateTime.now(),
+    creationDate: DateTime.fromMillisecondsSinceEpoch(
+        DateTime.now().millisecondsSinceEpoch),
     grid: GameGrid(blackPoints: [], whitePoints: [], width: 6, height: 6),
     id: '',
     name: '',
@@ -76,11 +85,11 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
   final TextEditingController heightController =
       TextEditingController(text: "6");
 
+  // Valide et crée la carte
   void _validateAndCreateMap(BuildContext context, GameMap gamemap) {
     if (heightController.text.trim().isEmpty ||
         widthController.text.trim().isEmpty ||
         mapNameController.text.trim().isEmpty) {
-      // Affichez un message d'erreur
       showAlertDialog(context, "Erreur", "Il y a des champs vides.");
       return;
     }
@@ -102,16 +111,22 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
       name: mapNameController.text,
     )
         .then((mapId) {
-      // Gérez le résultat, par exemple en affichant un message de succès ou en naviguant vers une autre page
       if (mapId.isNotEmpty) {
-        showAlertDialog(context, "Succès", "La carte a été créée avec succès.");
+        showAlertDialog(context, "Succès", "La carte a été créée avec succès.")
+            .then((_) {
+          Navigator.pop(context);
+          Navigator.pop(context);
+        });
       } else {
-        showAlertDialog(context, "Erreur", "La création de la carte a échoué.");
+        showAlertDialog(context, "Erreur", "La création de la carte a échoué.")
+            .then((_) {
+          Navigator.pop(context);
+        });
       }
     });
   }
 
-//--------------------------------------------------------------------------------------------------
+  // Construit l'interface utilisateur de l'écran du créateur de carte
   @override
   Widget build(BuildContext context) {
     final userRepository = UserRepository();
@@ -177,20 +192,12 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                IconButton(
-                  icon: const Icon(Icons.save),
-                  onPressed: () {
-                    // Ajoutez votre logique pour le bouton enregistrer ici
-                  },
-                ),
               ],
             ),
             const SizedBox(height: 16),
             Expanded(
               child: Container(
                   color: Colors.grey[200],
-                  // Votre widget pour afficher la map ici
-
                   child: GameGridWidgetEditor(
                     gameMap: GameMap(
                       author: gameMap.getAuthor,
@@ -204,6 +211,7 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
                       name: '',
                     ),
                     tool: currentToolMode,
+                    onVictoryStateChanged: _onVictoryStateChanged,
                   )),
             ),
             const SizedBox(height: 16),
@@ -249,21 +257,15 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
                       });
                     },
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.undo),
-                    onPressed: () {
-                      setState(() {
-                        currentToolMode = ToolMode.undoAction;
-                      });
-                    },
-                  ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
             Center(
               child: ElevatedButton(
-                onPressed: () => _validateAndCreateMap(context, gameMap),
+                onPressed: _isVictorious
+                    ? () => _validateAndCreateMap(context, gameMap)
+                    : null,
                 child: const Text('Validate'),
               ),
             ),

@@ -32,7 +32,9 @@ class GameMap {
     print(map);
     String name = map['name'] as String;
     String author = map['author'] as String;
-    DateTime creationDate = DateTime.parse(map['creation_date'] as String);
+    DateTime creationDate =
+        DateTime.fromMillisecondsSinceEpoch(map['creation_date'] as int);
+
     Map<String, dynamic> dimensions = {
       for (var k in map['dimensions'].keys) k.toString(): map['dimensions'][k]
     };
@@ -50,7 +52,9 @@ class GameMap {
         };
         return GameRanking.fromMap(rankingMap.entries.first);
       }).toList();
-      bestTime = ranking[0].time;
+      if (ranking.isNotEmpty) {
+        bestTime = ranking[0].time;
+      }
     }
 
     return GameMap(

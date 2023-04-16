@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
@@ -127,8 +128,9 @@ class GameRepository {
     final creationDate = DateTime.now();
 
     // Construisez l'objet mapData
+
     final mapData = {
-      'author': "userTest",
+      'author': _userRepository.getCurrentUser()?.displayName,
       'creation_date': creationDate.millisecondsSinceEpoch,
       'dimensions': {
         'height': height,
