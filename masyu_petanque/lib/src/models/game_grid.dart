@@ -1,3 +1,4 @@
+// Classe représentant une carte de jeu
 class GameMap {
   final String id;
   final String name;
@@ -17,6 +18,7 @@ class GameMap {
     this.ranking,
   });
 
+  // Getters
   String get getId => id;
   String get getName => name;
   String get getAuthor => author;
@@ -25,16 +27,16 @@ class GameMap {
   List<GameRanking>? get getRanking => ranking;
   String? get getBestTime => bestTime;
 
+  // Setters
   set setRanking(List<GameRanking>? ranking) => this.ranking = ranking;
   set setBestTime(String? bestTime) => this.bestTime = bestTime;
 
+  // Méthode pour créer une instance de GameMap à partir d'une Map
   factory GameMap.fromMap(Map<String, dynamic> map, String id) {
-    print(map);
     String name = map['name'] as String;
     String author = map['author'] as String;
     DateTime creationDate =
         DateTime.fromMillisecondsSinceEpoch(map['creation_date'] as int);
-
     Map<String, dynamic> dimensions = {
       for (var k in map['dimensions'].keys) k.toString(): map['dimensions'][k]
     };
@@ -69,12 +71,14 @@ class GameMap {
   }
 }
 
+// Classe représentant un classement de jeu
 class GameRanking {
   final String userId;
   final String time;
 
   GameRanking({required this.userId, required this.time});
 
+  // Méthode pour créer une instance de GameRanking à partir d'une MapEntry
   factory GameRanking.fromMap(MapEntry<String, dynamic> entry) {
     return GameRanking(
       userId: entry.key,
@@ -83,6 +87,7 @@ class GameRanking {
   }
 }
 
+// Classe représentant une grille de jeu
 class GameGrid {
   final int width;
   final int height;
@@ -96,40 +101,14 @@ class GameGrid {
     required this.whitePoints,
   });
 
+  // Méthode pour créer une instance de GameGrid à partir d'une Map
   factory GameGrid.fromMap(
       Map<String, dynamic> dimensions, Map<String, dynamic> map) {
     int width = dimensions['width'] as int;
     int height = dimensions['height'] as int;
 
-    // Declare blackPoints and whitePoints as nullable local variables
-    List<Point>? blackPoints;
-    List<Point>? whitePoints;
-
-    if (map['grid']['black_points'] == null) {
-      blackPoints = [];
-    } else {
-      blackPoints = (map['grid']['black_points'] as List<dynamic>)
-          .sublist(1)
-          .map<Point>((dynamic e) {
-        Map<String, dynamic> pointMap = {
-          for (var k in (e as Map).keys) k.toString(): e[k]
-        };
-        return Point.fromMap(pointMap);
-      }).toList();
-    }
-
-    if (map['grid']['white_points'] == null) {
-      whitePoints = [];
-    } else {
-      whitePoints = (map['grid']['white_points'] as List<dynamic>)
-          .sublist(1)
-          .map<Point>((dynamic e) {
-        Map<String, dynamic> pointMap = {
-          for (var k in (e as Map).keys) k.toString(): e[k]
-        };
-        return Point.fromMap(pointMap);
-      }).toList();
-    }
+    List<Point> blackPoints = _pointsFromMap(map['grid']['black_points']);
+    List<Point> whitePoints = _pointsFromMap(map['grid']['white_points']);
 
     return GameGrid(
       width: width,
@@ -138,14 +117,30 @@ class GameGrid {
       whitePoints: whitePoints,
     );
   }
+
+  // Méthode privée pour créer une liste de points à partir d'une Map
+  static List<Point> _pointsFromMap(List<dynamic>? pointMapList) {
+    if (pointMapList == null) {
+      return [];
+    } else {
+      return pointMapList.sublist(1).map<Point>((dynamic e) {
+        Map<String, dynamic> pointMap = {
+          for (var k in (e as Map).keys) k.toString(): e[k]
+        };
+        return Point.fromMap(pointMap);
+      }).toList();
+    }
+  }
 }
 
+// Classe représentant un point
 class Point {
   final int x;
   final int y;
 
   Point({required this.x, required this.y});
 
+  // Méthode pour créer une instance de Point à partir d'une Map
   factory Point.fromMap(Map<String, dynamic> map) {
     return Point(
       x: map['x'] as int,

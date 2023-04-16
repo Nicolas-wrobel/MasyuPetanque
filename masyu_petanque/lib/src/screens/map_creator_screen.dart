@@ -1,12 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/game_grid.dart';
-import '../repositories/authentication/user_repository.dart';
-import '../repositories/database/game_repository.dart';
-import '../widgets/burger_menu.dart';
-import 'dart:async';
+import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
+import 'package:masyu_petanque/src/repositories/database/game_repository.dart';
+import 'package:masyu_petanque/src/widgets/burger_menu.dart';
+import 'package:masyu_petanque/src/widgets/game_grid_editor.dart';
 
-import '../widgets/game_grid_editor.dart';
-
+// Enumération pour les modes d'outils disponibles dans l'éditeur de carte
 enum ToolMode {
   addBlackCircle,
   addWhiteCircle,
@@ -79,7 +79,6 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
 
   final TextEditingController mapNameController =
       TextEditingController(text: "Map");
-
   final TextEditingController widthController =
       TextEditingController(text: "6");
   final TextEditingController heightController =
@@ -149,6 +148,7 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Champs pour le nom de la carte et les dimensions (largeur et hauteur)
             Row(
               children: [
                 Expanded(
@@ -195,6 +195,7 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
               ],
             ),
             const SizedBox(height: 16),
+            // Grille de l'éditeur de carte
             Expanded(
               child: Container(
                   color: Colors.grey[200],
@@ -215,6 +216,7 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
                   )),
             ),
             const SizedBox(height: 16),
+            // Barre d'outils pour l'édition de la carte
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
@@ -261,6 +263,7 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
               ),
             ),
             const SizedBox(height: 16),
+            // Bouton pour valider et créer la carte
             Center(
               child: ElevatedButton(
                 onPressed: _isVictorious
@@ -274,10 +277,4 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
       ),
     );
   }
-}
-
-@override
-Widget build(BuildContext context) {
-  // TODO: implement build
-  throw UnimplementedError();
 }

@@ -1,19 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:masyu_petanque/src/models/game_grid.dart';
-/*
-class Point {
-  int x;
-  int y;
-  String color;
 
-  Point(this.x, this.y, this.color);
-
-  @override
-  String toString() {
-    return 'Point(x: $x, y: $y, color: $color)';
-  }
-}*/
-
+// Classe représentant une connexion entre deux points
 class Connection {
   int x1;
   int y1;
@@ -28,6 +16,7 @@ class Connection {
   }
 }
 
+// Fonction DFS pour vérifier si un cycle existe dans le graphe
 bool hasCycleDFS(
     int node, int parent, Map<int, List<int>> graph, Map<int, bool> visited) {
   visited[node] = true;
@@ -45,21 +34,21 @@ bool hasCycleDFS(
   return false;
 }
 
+// Fonction principale pour vérifier si la configuration actuelle est une victoire
 bool isVictory(List<Point> black_points, List<Point> white_points,
     List<Connection> connections) {
-  print('Points noirs: $black_points');
-  print('Points blancs: $white_points');
-  print('Liaisons: $connections');
-
+  // Combiner les points noirs et blancs dans une liste unique
   List<Point> points = [
     ...black_points,
     ...white_points,
   ];
 
+  // Fonction pour obtenir un point en fonction de ses coordonnées x et y
   Point? getPoint(int x, int y) {
     return points.firstWhereOrNull((p) => p.x == x && p.y == y);
   }
 
+  // Fonction pour obtenir les connexions d'un point spécifique
   List<Connection> getConnections(Point point) {
     return connections
         .where((c) =>
@@ -68,6 +57,7 @@ bool isVictory(List<Point> black_points, List<Point> white_points,
         .toList();
   }
 
+  // Fonction pour construire le graphe à partir des points et des connexions
   Map<int, List<int>> buildGraph() {
     Map<int, List<int>> graph = {};
     for (Point point in points) {
@@ -82,6 +72,7 @@ bool isVictory(List<Point> black_points, List<Point> white_points,
     return graph;
   }
 
+  // Fonction pour vérifier si un cycle existe dans le graphe
   bool checkLoop() {
     Map<int, List<int>> graph = buildGraph();
     Map<int, bool> visited = {for (var key in graph.keys) key: false};
@@ -99,11 +90,10 @@ bool isVictory(List<Point> black_points, List<Point> white_points,
 
   // Vérifier qu'une boucle existe
   bool loopExists = checkLoop();
-  print('Loop exists: $loopExists');
   if (!loopExists) return false;
+  // Fonction pour vérifier les règles spécifiques aux points noirs
   bool checkBlackPoint(Point point) {
     List<Connection> pointConnections = getConnections(point);
-    print('Black point: $point, connections: $pointConnections');
 
     if (pointConnections.length != 2) return false;
 
@@ -113,13 +103,12 @@ bool isVictory(List<Point> black_points, List<Point> white_points,
     bool oppositeDirections =
         (c1.x1 - c1.x2) * (c2.x1 - c2.x2) + (c1.y1 - c1.y2) * (c2.y1 - c2.y2) ==
             0;
-    print('Opposite directions: $oppositeDirections');
     return oppositeDirections;
   }
 
+  // Fonction pour vérifier les règles spécifiques aux points blancs
   bool checkWhitePoint(Point point) {
     List<Connection> pointConnections = getConnections(point);
-    print('White point: $point, connections: $pointConnections');
 
     if (pointConnections.length != 2) return false;
 
@@ -129,23 +118,19 @@ bool isVictory(List<Point> black_points, List<Point> white_points,
     bool sameDirections =
         (c1.x1 - c1.x2) * (c2.x1 - c2.x2) + (c1.y1 - c1.y2) * (c2.y1 - c2.y2) !=
             0;
-    print('Same directions: $sameDirections');
     return sameDirections;
   }
 
-  bool loopDetected = checkLoop();
-  print('Loop detected: $loopDetected');
-  if (!loopDetected) return false;
-
-// Vérifier que les points noirs sont bien reliés
+  // Vérifier que les points noirs sont bien reliés
   for (Point point in black_points) {
     if (!checkBlackPoint(point)) return false;
   }
 
-// Vérifier que les points blancs sont bien reliés
+  // Vérifier que les points blancs sont bien reliés
   for (Point point in white_points) {
     if (!checkWhitePoint(point)) return false;
   }
 
+  // Si toutes les conditions sont remplies, c'est une victoire
   return true;
 }

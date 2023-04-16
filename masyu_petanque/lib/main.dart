@@ -1,18 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
-import 'src/repositories/database/firebase_options.dart';
-import 'package:firebase_core/firebase_core.dart';
-
 import 'package:masyu_petanque/src/screens/game_screen.dart';
 import 'package:masyu_petanque/src/screens/home_screen.dart';
 import 'package:masyu_petanque/src/screens/map_creator_screen.dart';
 import 'package:masyu_petanque/src/screens/profile_screen.dart';
 import 'package:masyu_petanque/src/screens/startup_screen.dart';
+import 'package:masyu_petanque/src/repositories/database/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialisation de Firebase si l'application est en mode debug
   if (kDebugMode) {
     print("Firebase initializing...");
   }
@@ -30,6 +29,7 @@ void main() async {
 class MainApp extends StatelessWidget {
   const MainApp({Key? key}) : super(key: key);
 
+  // Méthode pour gérer les routes de l'application
   Route<dynamic> _onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/startup':
@@ -50,6 +50,7 @@ class MainApp extends StatelessWidget {
     }
   }
 
+  // Construire la méthode pour l'application
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

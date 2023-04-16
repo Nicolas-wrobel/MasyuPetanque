@@ -1,27 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
-import 'package:masyu_petanque/src/screens/startup_screen.dart';
-
-import '../screens/home_screen.dart';
+import 'package:masyu_petanque/src/screens/home_screen.dart';
 
 class DrawerMenu extends StatelessWidget {
   final UserRepository userRepository;
   final bool isMapCreator;
 
-  const DrawerMenu(
-      {Key? key, required this.userRepository, this.isMapCreator = false})
-      : super(key: key);
+  // Constructeur avec paramètres
+  const DrawerMenu({
+    Key? key,
+    required this.userRepository,
+    this.isMapCreator = false,
+  }) : super(key: key);
 
-  // Le menu tiroir avec les différentes options
   @override
   Widget build(BuildContext context) {
     final favoritesFilterProvider = FavoritesFilterProvider.of(context);
     final favoritesFilterNotifier =
         favoritesFilterProvider?.favoritesFilterNotifier;
 
+    // Construire le tiroir du menu avec des éléments de liste
     return Drawer(
       child: ListView(
         children: [
+          // Élément pour accéder à l'éditeur de carte
           ListTile(
             leading: const Icon(Icons.edit),
             title: const Text('Edit'),
@@ -30,13 +32,15 @@ class DrawerMenu extends StatelessWidget {
               Navigator.pushNamed(context, '/map_creator');
             },
           ),
+          // Élément pour accéder au profil de l'utilisateur
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Profile'),
             onTap: () {
-              // Add navigation logic here
+              // TODO : Navigation vers le profil
             },
           ),
+          // Élément pour basculer entre la page d'accueil et les favoris
           ListTile(
             leading: isMapCreator || favoritesFilterNotifier?.value == true
                 ? const Icon(Icons.home)
@@ -53,6 +57,7 @@ class DrawerMenu extends StatelessWidget {
               }
             },
           ),
+          // Élément pour se déconnecter
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Sign Out'),

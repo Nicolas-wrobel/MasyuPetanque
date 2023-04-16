@@ -2,11 +2,13 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 
+// Modèle pour gérer un chronomètre
 class TimerModel extends ChangeNotifier {
-  Timer? _timer;
-  int _elapsedMilliseconds = 0;
-  final _format = NumberFormat("00");
+  Timer? _timer; // Timer pour suivre le temps écoulé
+  int _elapsedMilliseconds = 0; // Temps écoulé en millisecondes
+  final _format = NumberFormat("00"); // Format pour afficher le temps écoulé
 
+  // Méthode pour obtenir le temps écoulé formaté
   String get elapsedTime {
     final minutes = _elapsedMilliseconds ~/ (60 * 1000);
     final seconds = (_elapsedMilliseconds % (60 * 1000)) ~/ 1000;
@@ -14,6 +16,7 @@ class TimerModel extends ChangeNotifier {
     return '${_format.format(minutes)}:${_format.format(seconds)}.${_format.format(milliseconds)}';
   }
 
+  // Méthode pour démarrer le chronomètre
   void start() {
     if (_timer != null) return;
 
@@ -23,17 +26,20 @@ class TimerModel extends ChangeNotifier {
     });
   }
 
+  // Méthode pour arrêter le chronomètre
   void stop() {
     _timer?.cancel();
     _timer = null;
   }
 
+  // Méthode pour réinitialiser le chronomètre
   void reset() {
     stop();
     _elapsedMilliseconds = 0;
     notifyListeners();
   }
 
+  // Méthode pour nettoyer les ressources lors de la suppression de l'objet
   @override
   void dispose() {
     _timer?.cancel();

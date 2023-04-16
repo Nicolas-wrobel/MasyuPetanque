@@ -1,17 +1,15 @@
 import 'dart:async';
-
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/user.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
-
 import 'package:masyu_petanque/src/screens/game_screen.dart';
-import '../models/game_grid.dart';
-import '../repositories/database/game_repository.dart';
-import '../screens/home_screen.dart';
-import 'game_grid_widget.dart';
+import 'package:masyu_petanque/src/models/game_grid.dart';
+import 'package:masyu_petanque/src/repositories/database/game_repository.dart';
+import 'package:masyu_petanque/src/screens/home_screen.dart';
+import 'package:masyu_petanque/src/widgets/game_grid_widget.dart';
 
+// Définit un widget personnalisé de type StatefulWidget appelé CarouselWithFavorites
 class CarouselWithFavorites extends StatefulWidget {
   final UserRepository userRepository;
   final GameRepository gameRepository;
@@ -28,6 +26,7 @@ class CarouselWithFavorites extends StatefulWidget {
 
 class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
   List<GameMap> mapData = [];
+  final ValueNotifier<int> _currentIndex = ValueNotifier<int>(0);
   GameRepository gameRepository =
       GameRepository(userRepository: UserRepository());
   LocalUser? user;
@@ -38,6 +37,7 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
     _loadUserData();
   }
 
+  // Charge les données utilisateur
   Future<void> _loadUserData() async {
     final fetchedUser = await widget.userRepository.getUser();
     setState(() {
@@ -47,8 +47,9 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
 
   @override
   Widget build(BuildContext context) {
+    // Si l'utilisateur n'est pas encore chargé, affiche un indicateur de chargement
     if (user == null) {
-      return const CircularProgressIndicator(); // Afficher un indicateur de chargement si l'utilisateur n'est pas encore chargé
+      return const CircularProgressIndicator();
     }
 
     // Récupérer les cartes favorites de l'utilisateur
@@ -71,6 +72,7 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
             final favoriteMaps =
                 mapData.where((map) => favorites.contains(map.id)).toList();
 
+            // Affiche le contenu en fonction du filtre de favoris et de l'état du favori
             return ValueListenableBuilder<bool>(
               valueListenable:
                   FavoritesFilterProvider.of(context)!.favoritesFilterNotifier,
@@ -84,81 +86,94 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
                   );
                 }
 
-                return CarouselSlider.builder(
-                  itemCount: displayedMaps.length,
-                  itemBuilder:
-                      (BuildContext context, int index, int realIndex) {
+                // Construit un PageView avec les cartes filtrées
+                return ValueListenableBuilder<int>(
+                  valueListenable: _currentIndex,
+                  builder: (context, index, _) {
                     final map = displayedMaps[index];
 
-                    return AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 500),
-                      child: Card(
-                        key: ValueKey<String>(map.id),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(map.name,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                )),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.4,
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => GameScreen(
-                                        mapId: map.id,
-                                      ),
+                    // Affiche les détails de la carte et le bouton de favori
+                    return SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.15),
+                          Text(map.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              )),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.425,
+                            child: PageView.builder(
+                              itemBuilder: (BuildContext context, int index) {
+                                final map = displayedMaps[index];
+
+                                // Crée un widget InkWell avec un GameGridWidget pour chaque carte
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 25.0),
+                                  child: InkWell(
+                                    onTap: () {
+                                      // Navigue vers l'écran de jeu lorsqu'on clique sur une carte
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => GameScreen(
+                                            mapId: map.id,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: AspectRatio(
+                                      aspectRatio:
+                                          map.grid.width / map.grid.height,
+                                      child: GameGridWidget(
+                                          gameMap: map, isPreview: true),
                                     ),
-                                  );
-                                },
-                                child: SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.4,
-                                  child: GameGridWidget(
-                                      gameMap: map, isPreview: true),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text('Créateur: ${map.author}'),
-                            Text('Meilleur temps: ${map.bestTime ?? 'N/A'}'),
-                            IconButton(
-                              icon: Icon(
-                                favorites.contains(map.id)
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color: favorites.contains(map.id)
-                                    ? Colors.red
-                                    : null,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  if (favorites.contains(map.id)) {
-                                    gameRepository
-                                        .removeMapFromFavorites(map.id);
-                                    favorites.remove(map.id);
-                                  } else {
-                                    gameRepository.addMapToFavorites(map.id);
-                                    favorites.add(map.id);
-                                  }
-                                });
+                                  ),
+                                );
+                              },
+                              itemCount: displayedMaps.length,
+                              onPageChanged: (int newIndex) {
+                                // Mettez à jour l'index lorsque l'utilisateur change de page
+                                _currentIndex.value = newIndex;
                               },
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(
+                            height: 20.0,
+                          ),
+                          Text('Créateur: ${map.author}'),
+                          Text('Meilleur temps: ${map.bestTime ?? 'N/A'}'),
+                          // Crée un bouton pour ajouter/supprimer la carte des favoris
+                          IconButton(
+                            icon: Icon(
+                              favorites.contains(map.id)
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: favorites.contains(map.id)
+                                  ? Colors.red
+                                  : null,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                if (favorites.contains(map.id)) {
+                                  gameRepository.removeMapFromFavorites(map.id);
+                                  favorites.remove(map.id);
+                                } else {
+                                  gameRepository.addMapToFavorites(map.id);
+                                  favorites.add(map.id);
+                                }
+                              });
+                            },
+                          ),
+                        ],
                       ),
                     );
                   },
-                  options: CarouselOptions(
-                    height: MediaQuery.of(context).size.height * 0.8,
-                    viewportFraction: 0.8,
-                    enableInfiniteScroll: false,
-                  ),
                 );
               },
             );
