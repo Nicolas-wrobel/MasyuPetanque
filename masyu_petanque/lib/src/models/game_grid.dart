@@ -85,35 +85,47 @@ class GameGrid {
   final List<Point> blackPoints;
   final List<Point> whitePoints;
 
-  GameGrid(
-      {required this.width,
-      required this.height,
-      required this.blackPoints,
-      required this.whitePoints});
+  GameGrid({
+    required this.width,
+    required this.height,
+    required this.blackPoints,
+    required this.whitePoints,
+  });
 
   factory GameGrid.fromMap(
       Map<String, dynamic> dimensions, Map<String, dynamic> map) {
     int width = dimensions['width'] as int;
     int height = dimensions['height'] as int;
 
-    print(map['grid']['black_points']);
-    List<Point> blackPoints = (map['grid']['black_points'] as List<dynamic>)
-        .sublist(1)
-        .map<Point>((dynamic e) {
-      Map<String, dynamic> pointMap = {
-        for (var k in (e as Map).keys) k.toString(): e[k]
-      };
-      return Point.fromMap(pointMap);
-    }).toList();
+    // Declare blackPoints and whitePoints as nullable local variables
+    List<Point>? blackPoints;
+    List<Point>? whitePoints;
 
-    List<Point> whitePoints = (map['grid']['white_points'] as List<dynamic>)
-        .sublist(1)
-        .map<Point>((dynamic e) {
-      Map<String, dynamic> pointMap = {
-        for (var k in (e as Map).keys) k.toString(): e[k]
-      };
-      return Point.fromMap(pointMap);
-    }).toList();
+    if (map['grid']['black_points'] == null) {
+      blackPoints = [];
+    } else {
+      blackPoints = (map['grid']['black_points'] as List<dynamic>)
+          .sublist(1)
+          .map<Point>((dynamic e) {
+        Map<String, dynamic> pointMap = {
+          for (var k in (e as Map).keys) k.toString(): e[k]
+        };
+        return Point.fromMap(pointMap);
+      }).toList();
+    }
+
+    if (map['grid']['white_points'] == null) {
+      whitePoints = [];
+    } else {
+      whitePoints = (map['grid']['white_points'] as List<dynamic>)
+          .sublist(1)
+          .map<Point>((dynamic e) {
+        Map<String, dynamic> pointMap = {
+          for (var k in (e as Map).keys) k.toString(): e[k]
+        };
+        return Point.fromMap(pointMap);
+      }).toList();
+    }
 
     return GameGrid(
       width: width,

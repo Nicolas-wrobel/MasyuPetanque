@@ -6,14 +6,18 @@ import '../screens/home_screen.dart';
 
 class DrawerMenu extends StatelessWidget {
   final UserRepository userRepository;
+  final bool isMapCreator;
 
-  const DrawerMenu({Key? key, required this.userRepository}) : super(key: key);
+  const DrawerMenu(
+      {Key? key, required this.userRepository, this.isMapCreator = false})
+      : super(key: key);
 
   // Le menu tiroir avec les différentes options
   @override
   Widget build(BuildContext context) {
+    final favoritesFilterProvider = FavoritesFilterProvider.of(context);
     final favoritesFilterNotifier =
-        FavoritesFilterProvider.of(context)!.favoritesFilterNotifier;
+        favoritesFilterProvider?.favoritesFilterNotifier;
 
     return Drawer(
       child: ListView(
@@ -34,15 +38,19 @@ class DrawerMenu extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: favoritesFilterNotifier.value
+            leading: isMapCreator || favoritesFilterNotifier?.value == true
                 ? const Icon(Icons.home)
                 : const Icon(Icons.favorite),
-            title: favoritesFilterNotifier.value
+            title: isMapCreator || favoritesFilterNotifier?.value == true
                 ? const Text('Home')
                 : const Text('Favorites'),
             onTap: () {
               Navigator.pop(context); // Ferme le tiroir du menu
-              favoritesFilterNotifier.value = !favoritesFilterNotifier.value;
+              if (isMapCreator) {
+                Navigator.pushNamed(context, '/home');
+              } else if (favoritesFilterNotifier != null) {
+                favoritesFilterNotifier.value = !favoritesFilterNotifier.value;
+              }
             },
           ),
           ListTile(

@@ -127,6 +127,7 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
       ),
       drawer: DrawerMenu(
         userRepository: userRepository,
+        isMapCreator: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
