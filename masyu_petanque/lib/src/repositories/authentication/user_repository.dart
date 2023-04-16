@@ -3,6 +3,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:masyu_petanque/src/models/user.dart';
+
+// Classe pour gérer les interactions avec les utilisateurs
 class UserRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
@@ -13,6 +16,7 @@ class UserRepository {
     _databaseReference = _firebaseDatabase.ref();
   }
 
+  // Méthode pour se connecter avec Google
   Future<User?> signInWithGoogle() async {
     if (kDebugMode) {
       print("signInWithGoogle");
@@ -34,23 +38,22 @@ class UserRepository {
         final User? user = userCredential.user;
 
         if (user != null) {
-          // Checking if the user is new or already exists
+          // Vérifier si l'utilisateur est nouveau ou existe déjà
           final isNewUser = userCredential.additionalUserInfo!.isNewUser;
           if (isNewUser) {
             if (kDebugMode) {
               print("New user created");
             }
 
-            // Create a new user instance in the database
+            // Créer une nouvelle instance d'utilisateur dans la base de données
             final newUser = {
-              "favourites_maps": [],
+              "favorite_maps": [],
               "first_connection": DateTime.now().toIso8601String(),
               "first_name": user.displayName?.split(' ')[0],
               "last_connection": DateTime.now().toIso8601String(),
               "last_name": user.displayName!.split(' ').length > 1
                   ? user.displayName?.split(' ')[1]
-                  : '',
-              "played_maps": {}
+                  : ''
             };
 
             await _databaseReference.child('users/${user.uid}').set(newUser);
@@ -58,7 +61,7 @@ class UserRepository {
             if (kDebugMode) {
               print("User named ${user.displayName} already exists");
             }
-            // Update the last connection time
+            // Mettre à jour la dernière connexion
             await _databaseReference
                 .child('users/${user.uid}/last_connection')
                 .set(DateTime.now().toIso8601String());
@@ -75,6 +78,7 @@ class UserRepository {
     return null;
   }
 
+  // Méthode pour obtenir l'utilisateur actuel
   User? getCurrentUser() {
     if (kDebugMode) {
       print("getCurrentUser ${_auth.currentUser}");
@@ -82,11 +86,36 @@ class UserRepository {
     return _auth.currentUser;
   }
 
+  // Méthode pour se déconnecter
   Future<void> signOut() async {
     if (kDebugMode) {
       print("signOut");
     }
     await _auth.signOut();
     await _googleSignIn.signOut();
+  }
+
+  // Méthode pour obtenir les informations de l'utilisateur
+  Future<LocalUser?> getUser() async {
+    User? currentUser = getCurrentUser();
+    if (currentUser != null) {
+      String userId = currentUser.uid;
+      DatabaseReference userRef = _databaseReference.child('users/$userId');
+      DatabaseEvent event = await userRef.once();
+      if (kDebugMode) {
+        print(event.snapshot.value);
+      }
+      if (event.snapshot.value != null) {
+        final Map<dynamic, dynamic> userData = event.snapshot.value as Map;
+        final Map<String, dynamic> userDataFormatted =
+            userData.map<String, dynamic>(
+          (key, value) => MapEntry(key.toString(), value),
+        );
+        // Convertir les données de l'utilisateur en une instance de LocalUser
+        return LocalUser.fromMap(userDataFormatted, userId);
+      }
+    }
+    // Retourne null si aucune donnée utilisateur n'est trouvée
+    return null;
   }
 }
