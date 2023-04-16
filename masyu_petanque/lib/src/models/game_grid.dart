@@ -48,7 +48,7 @@ class GameMap {
         Map<String, dynamic> rankingMap = {
           for (var k in (e as Map).keys) k.toString(): e[k]
         };
-        return GameRanking.fromMap(rankingMap);
+        return GameRanking.fromMap(rankingMap.entries.first);
       }).toList();
       bestTime = ranking[0].time;
     }
@@ -71,10 +71,10 @@ class GameRanking {
 
   GameRanking({required this.userId, required this.time});
 
-  factory GameRanking.fromMap(Map<String, dynamic> map) {
+  factory GameRanking.fromMap(MapEntry<String, dynamic> entry) {
     return GameRanking(
-      userId: map['user_id'] as String,
-      time: map['time'] as String,
+      userId: entry.key,
+      time: entry.value.toString(),
     );
   }
 }

@@ -129,7 +129,7 @@ class GameRepository {
     // Construisez l'objet mapData
     final mapData = {
       'author': "userTest",
-      'creation_date': creationDate.toIso8601String(),
+      'creation_date': creationDate.millisecondsSinceEpoch,
       'dimensions': {
         'height': height,
         'width': width,
@@ -160,76 +160,63 @@ class GameRepository {
       throw Exception('No user is currently signed in');
     }
 
+    bool haveToUpdateRanking = false;
+
     // Update the list of played maps by the user: users/$userId/played_maps
     final userPlayedMapsRef =
         _databaseReference.child('users/$userId/played_maps');
-    await userPlayedMapsRef.update({mapId: true});
+    final userPlayedMapsDataSnapshot =
+        await userPlayedMapsRef.child(mapId).once();
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
 
-    // Update users/$userId/played_maps/$mapId/best_time
-    final userPlayedMapBestTimeRef =
-        _databaseReference.child('users/$userId/played_maps/$mapId/best_time');
-    final userPlayedMapBestTimeDataSnapshot =
-        await userPlayedMapBestTimeRef.once();
-    final userPlayedMapBestTimeData =
-        userPlayedMapBestTimeDataSnapshot.snapshot.value;
-
-    if (userPlayedMapBestTimeData == null ||
-        timer < (userPlayedMapBestTimeData as num)) {
-      await userPlayedMapBestTimeRef.set(timer);
-    }
-
-    // Add the playtime to the list of playtimes of the map: users/$userId/played_maps/$mapId/history/{timestamp: timer}
-    final userPlayedMapHistoryRef =
-        _databaseReference.child('users/$userId/played_maps/$mapId/history');
-    final timestamp = DateTime.now().toIso8601String();
-    await userPlayedMapHistoryRef.update({timestamp: timer});
-
-    // Update the ranking of the map: maps/$mapId/ranking/$rank/{user_id: timer}
-    final mapRankingRef = _databaseReference.child('maps/$mapId/ranking');
-    final mapRankingDataSnapshot = await mapRankingRef.once();
-    final mapRankingData = mapRankingDataSnapshot.snapshot.value;
-
-    if (mapRankingData != null) {
-      final Map<dynamic, dynamic> mapRankingDataMap =
-          mapRankingData as Map<dynamic, dynamic>;
-      final List<int> mapRankingDataMapKeysInt = mapRankingDataMap.keys
-          .map<int>((key) => int.parse(key))
-          .toList(growable: false);
-
-      int currentUserRankingIndex = mapRankingDataMapKeysInt
-          .indexWhere((key) => mapRankingDataMap[key.toString()] == userId);
-
-      int insertIndex = mapRankingDataMapKeysInt
-          .indexWhere((key) => timer < mapRankingDataMap[key.toString()]);
-
-      if (insertIndex == -1) insertIndex = mapRankingDataMapKeysInt.length;
-
-      if (currentUserRankingIndex == -1) {
-        // User is not currently in the ranking
-        mapRankingDataMapKeysInt.insert(insertIndex, timer);
-      } else {
-        // User is already in the ranking
-        if (timer <
-            mapRankingDataMap[
-                mapRankingDataMapKeysInt[currentUserRankingIndex].toString()]) {
-          // Update the existing user's time
-          mapRankingDataMapKeysInt.removeAt(currentUserRankingIndex);
-          mapRankingDataMapKeysInt.insert(insertIndex, timer);
-        }
-      }
-      await _updateRankingData(mapRankingRef, mapRankingDataMapKeysInt, userId);
+    if (!userPlayedMapsDataSnapshot.snapshot.exists) {
+      await userPlayedMapsRef.child(mapId).set({
+        'best_time': timer,
+        'history': {timestamp: timer}
+      });
+      haveToUpdateRanking = true;
     } else {
-      // No existing ranking data, create a new entry for the user
-      await mapRankingRef.child('1').set({userId: timer});
+      final oldBestTime = (userPlayedMapsDataSnapshot.snapshot.value
+          as Map<dynamic, dynamic>)['best_time'];
+      if (timer < oldBestTime) {
+        await userPlayedMapsRef.child(mapId).update({'best_time': timer});
+        haveToUpdateRanking = true;
+      }
+      final userPlayedMapHistoryRef =
+          _databaseReference.child('users/$userId/played_maps/$mapId/history');
+      await userPlayedMapHistoryRef.update({timestamp.toString(): timer});
     }
-  }
 
-  Future<void> _updateRankingData(DatabaseReference mapRankingRef,
-      List<int> mapRankingDataMapKeysInt, String userId) async {
-    int rank = 1;
-    for (int key in mapRankingDataMapKeysInt) {
-      await mapRankingRef.child(rank.toString()).update({userId: key});
-      rank++;
+    if (haveToUpdateRanking) {
+      // Update the ranking of the map: maps/$mapId/ranking/$rank/{user_id: timer}
+      final mapRankingRef = _databaseReference.child('maps/$mapId/ranking');
+      final mapRankingDataSnapshot = await mapRankingRef.once();
+      final mapRankingData =
+          mapRankingDataSnapshot.snapshot.value as List<dynamic>;
+      final List<Map<String, dynamic>> mapRankingList = mapRankingData
+          .where((entry) => entry != null)
+          .map<Map<String, dynamic>>((entry) {
+        return {entry.keys.first.toString(): entry.values.first as int};
+      }).toList();
+
+      int currentUserRankingIndex = mapRankingList
+          .indexWhere((mapEntry) => mapEntry.keys.contains(userId));
+
+      if (currentUserRankingIndex != -1) {
+        // Remove the user from the ranking
+        mapRankingList.removeAt(currentUserRankingIndex);
+      }
+
+      int insertIndex = mapRankingList
+          .indexWhere((mapEntry) => timer < mapEntry.values.first);
+
+      if (insertIndex == -1) insertIndex = mapRankingList.length;
+
+      // Insert the user at the new position
+      mapRankingList.insert(insertIndex, {userId: timer});
+
+      // Update the ranking in the database
+      await mapRankingRef.set(mapRankingList);
     }
   }
 
