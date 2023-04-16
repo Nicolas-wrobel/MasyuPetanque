@@ -28,6 +28,7 @@ class CarouselWithFavorites extends StatefulWidget {
 
 class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
   List<GameMap> mapData = [];
+  final ValueNotifier<int> _currentIndex = ValueNotifier<int>(0);
   GameRepository gameRepository =
       GameRepository(userRepository: UserRepository());
   LocalUser? user;
@@ -84,81 +85,89 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
                   );
                 }
 
-                return CarouselSlider.builder(
-                  itemCount: displayedMaps.length,
-                  itemBuilder:
-                      (BuildContext context, int index, int realIndex) {
+                return ValueListenableBuilder<int>(
+                  valueListenable: _currentIndex,
+                  builder: (context, index, _) {
                     final map = displayedMaps[index];
 
-                    return AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 500),
-                      child: Card(
-                        key: ValueKey<String>(map.id),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(map.name,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                )),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.4,
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => GameScreen(
-                                        mapId: map.id,
-                                      ),
+                    return SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.15),
+                          Text(map.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              )),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.425,
+                            child: PageView.builder(
+                              itemBuilder: (BuildContext context, int index) {
+                                final map = displayedMaps[index];
+
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 25.0),
+                                  child: InkWell(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => GameScreen(
+                                            mapId: map.id,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: AspectRatio(
+                                      aspectRatio:
+                                          map.grid.width / map.grid.height,
+                                      child: GameGridWidget(
+                                          gameMap: map, isPreview: true),
                                     ),
-                                  );
-                                },
-                                child: SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.4,
-                                  child: GameGridWidget(
-                                      gameMap: map, isPreview: true),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text('Créateur: ${map.author}'),
-                            Text('Meilleur temps: ${map.bestTime ?? 'N/A'}'),
-                            IconButton(
-                              icon: Icon(
-                                favorites.contains(map.id)
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color: favorites.contains(map.id)
-                                    ? Colors.red
-                                    : null,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  if (favorites.contains(map.id)) {
-                                    gameRepository
-                                        .removeMapFromFavorites(map.id);
-                                    favorites.remove(map.id);
-                                  } else {
-                                    gameRepository.addMapToFavorites(map.id);
-                                    favorites.add(map.id);
-                                  }
-                                });
+                                  ),
+                                );
+                              },
+                              itemCount: displayedMaps.length,
+                              onPageChanged: (int newIndex) {
+                                // Mettez à jour l'index lorsque l'utilisateur change de page
+                                _currentIndex.value = newIndex;
                               },
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(
+                            height: 20.0,
+                          ),
+                          Text('Créateur: ${map.author}'),
+                          Text('Meilleur temps: ${map.bestTime ?? 'N/A'}'),
+                          IconButton(
+                            icon: Icon(
+                              favorites.contains(map.id)
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: favorites.contains(map.id)
+                                  ? Colors.red
+                                  : null,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                if (favorites.contains(map.id)) {
+                                  gameRepository.removeMapFromFavorites(map.id);
+                                  favorites.remove(map.id);
+                                } else {
+                                  gameRepository.addMapToFavorites(map.id);
+                                  favorites.add(map.id);
+                                }
+                              });
+                            },
+                          ),
+                        ],
                       ),
                     );
                   },
-                  options: CarouselOptions(
-                    height: MediaQuery.of(context).size.height * 0.8,
-                    viewportFraction: 0.8,
-                    enableInfiniteScroll: false,
-                  ),
                 );
               },
             );
