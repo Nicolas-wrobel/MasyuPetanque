@@ -20,12 +20,15 @@ class GameGridWidget extends StatefulWidget {
 
 class GameGridWidgetState extends State<GameGridWidget> {
   final List<List<int>> liaisons = [];
+  late BuildContext dialogContext;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TimerModel>(context, listen: false).start();
+      if (mounted) {
+        Provider.of<TimerModel>(context, listen: false).start();
+      }
     });
   }
 
@@ -63,6 +66,7 @@ class GameGridWidgetState extends State<GameGridWidget> {
   }
 
   void _showVictoryDialog() {
+    if (!mounted) return;
     final userRepository = UserRepository();
     final gameRepository = GameRepository(userRepository: userRepository);
     stopTimer();
@@ -83,6 +87,7 @@ class GameGridWidgetState extends State<GameGridWidget> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        dialogContext = context;
         return AlertDialog(
           title: const Text('Victoire !'),
           content: Text(
@@ -97,7 +102,7 @@ class GameGridWidgetState extends State<GameGridWidget> {
             TextButton(
               child: const Text('Rejouer'),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
                 resetTimer();
                 clear();
                 startTimer();
