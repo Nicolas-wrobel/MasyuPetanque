@@ -84,18 +84,18 @@ class GameGridWidgetState extends State<GameGridWidget> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Victoire !'),
+          title: const Text('Victoire !'),
           content: Text(
               'Félicitations, vous avez gagné ! Temps écoulé : ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}.${centiseconds.toString().padLeft(2, '0')}'),
           actions: <Widget>[
             TextButton(
-              child: Text('Quitter'),
+              child: const Text('Quitter'),
               onPressed: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
               },
             ),
             TextButton(
-              child: Text('Rejouer'),
+              child: const Text('Rejouer'),
               onPressed: () {
                 Navigator.of(context).pop();
                 resetTimer();

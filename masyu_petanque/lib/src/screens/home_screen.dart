@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../repositories/database/game_repository.dart';
 import '../widgets/burger_menu.dart';
 import 'package:masyu_petanque/src/widgets/carousel.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
+import 'package:masyu_petanque/src/models/timer_model.dart'; // N'oubliez pas d'importer le fichier timer_model.dart
 
 class HomeScreen extends StatelessWidget {
   final UserRepository _userRepository;
@@ -17,12 +19,14 @@ class HomeScreen extends StatelessWidget {
     return HomeScreen._(key: key, userRepository: userRepository);
   }
 
-  // MaterialApp a été supprimé
   @override
   Widget build(BuildContext context) {
     return FavoritesFilterProvider(
       favoritesFilterNotifier: ValueNotifier(false),
-      child: const MainScreen(),
+      child: ChangeNotifierProvider<TimerModel>(
+        create: (context) => TimerModel(),
+        child: const MainScreen(),
+      ),
     );
   }
 }
