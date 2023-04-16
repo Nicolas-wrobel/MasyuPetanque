@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../repositories/database/game_repository.dart';
-import '../widgets/burger_menu.dart';
+import 'package:masyu_petanque/src/repositories/database/game_repository.dart';
+import 'package:masyu_petanque/src/widgets/burger_menu.dart';
 import 'package:masyu_petanque/src/widgets/carousel.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
-import 'package:masyu_petanque/src/models/timer_model.dart'; // N'oubliez pas d'importer le fichier timer_model.dart
+import 'package:masyu_petanque/src/models/timer_model.dart';
 
+// Classe pour l'écran d'accueil
 class HomeScreen extends StatelessWidget {
   final UserRepository _userRepository;
 
+  // Constructeur privé
   const HomeScreen._({Key? key, required UserRepository userRepository})
       : _userRepository = userRepository,
         super(key: key);
 
-  // Static method to create an instance of StartupScreen
+  // Méthode statique pour créer une instance de HomeScreen
   static HomeScreen create({Key? key}) {
     final userRepository = UserRepository();
     return HomeScreen._(key: key, userRepository: userRepository);
@@ -21,6 +23,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Utilisation de FavoritesFilterProvider et ChangeNotifierProvider pour gérer les favoris et le timer
     return FavoritesFilterProvider(
       favoritesFilterNotifier: ValueNotifier(false),
       child: ChangeNotifierProvider<TimerModel>(
@@ -31,6 +34,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+// Classe pour le provider de filtre de favoris
 class FavoritesFilterProvider extends InheritedWidget {
   final ValueNotifier<bool> favoritesFilterNotifier;
 
@@ -51,15 +55,16 @@ class FavoritesFilterProvider extends InheritedWidget {
   }
 }
 
+// Classe pour l'écran principal avec la barre d'applications et le menu burger
 class MainScreen extends StatelessWidget {
   const MainScreen({Key? key}) : super(key: key);
 
-  // L'écran principal avec la barre d'applications et le burger menu
   @override
   Widget build(BuildContext context) {
     final userRepository = UserRepository();
     final gameRepository = GameRepository(userRepository: userRepository);
 
+    // Création de la barre d'applications et du menu burger
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -84,6 +89,7 @@ class MainScreen extends StatelessWidget {
       drawer: DrawerMenu(
         userRepository: userRepository,
       ),
+      // Utilisation du widget CarouselWithFavorites pour afficher les favoris
       body: CarouselWithFavorites(
         userRepository: userRepository,
         gameRepository: gameRepository,

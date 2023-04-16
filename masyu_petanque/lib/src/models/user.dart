@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+// Classe représentant un utilisateur local
 class LocalUser {
   final String id;
   final String firstName;
@@ -9,6 +10,7 @@ class LocalUser {
   final List<String> favoriteMaps;
   final Map<String, dynamic>? playedMaps;
 
+  // Constructeur pour créer un utilisateur local
   LocalUser({
     required this.id,
     required this.firstName,
@@ -19,11 +21,13 @@ class LocalUser {
     required this.playedMaps,
   });
 
+  // Méthode pour créer un utilisateur local à partir d'une Map
   static LocalUser fromMap(Map<String, dynamic> map, String id) {
     if (kDebugMode) {
       print("voici le user reçu $map");
     }
 
+    // Extraire les cartes favorites
     List<String> favoriteMaps = [];
     if (map['favorite_maps'] != null) {
       final Map<dynamic, dynamic> favoriteMapsData = map['favorite_maps'];
@@ -38,6 +42,7 @@ class LocalUser {
       playedMaps = Map<String, dynamic>.from(map['played_maps']);
     }
 
+    // Retourner un nouvel objet LocalUser avec les données extraites
     return LocalUser(
       id: id,
       firstName: map['first_name'],

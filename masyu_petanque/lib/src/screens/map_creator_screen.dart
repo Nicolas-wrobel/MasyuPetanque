@@ -1,12 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/game_grid.dart';
-import '../repositories/authentication/user_repository.dart';
-import '../repositories/database/game_repository.dart';
-import '../widgets/burger_menu.dart';
-import 'dart:async';
+import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
+import 'package:masyu_petanque/src/repositories/database/game_repository.dart';
+import 'package:masyu_petanque/src/widgets/burger_menu.dart';
+import 'package:masyu_petanque/src/widgets/game_grid_editor.dart';
 
-import '../widgets/game_grid_editor.dart';
-
+// Enumération pour les modes d'outils disponibles dans l'éditeur de carte
 enum ToolMode {
   addBlackCircle,
   addWhiteCircle,
@@ -17,6 +17,7 @@ enum ToolMode {
 
 ToolMode currentToolMode = ToolMode.addBlackCircle;
 
+// Fonction pour afficher une boîte de dialogue d'alerte
 Future<void> showAlertDialog(
     BuildContext context, String title, String content) {
   final completer = Completer<void>();
@@ -44,7 +45,6 @@ Future<void> showAlertDialog(
 }
 
 List<Map<String, int>> blanc = [{}];
-
 List<Map<String, int>> noir = [{}];
 
 class MapCreatorScreen extends StatefulWidget {
@@ -70,17 +70,16 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
 
   final TextEditingController mapNameController =
       TextEditingController(text: "Map");
-
   final TextEditingController widthController =
       TextEditingController(text: "6");
   final TextEditingController heightController =
       TextEditingController(text: "6");
 
+  // Fonction pour valider et créer la carte
   void _validateAndCreateMap(BuildContext context, GameMap gamemap) {
     if (heightController.text.trim().isEmpty ||
         widthController.text.trim().isEmpty ||
         mapNameController.text.trim().isEmpty) {
-      // Affichez un message d'erreur
       showAlertDialog(context, "Erreur", "Il y a des champs vides.");
       return;
     }
@@ -102,7 +101,6 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
       name: mapNameController.text,
     )
         .then((mapId) {
-      // Gérez le résultat, par exemple en affichant un message de succès ou en naviguant vers une autre page
       if (mapId.isNotEmpty) {
         showAlertDialog(context, "Succès", "La carte a été créée avec succès.");
       } else {
@@ -111,7 +109,6 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
     });
   }
 
-//--------------------------------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     final userRepository = UserRepository();
@@ -134,6 +131,7 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Champs pour le nom de la carte et les dimensions (largeur et hauteur)
             Row(
               children: [
                 Expanded(
@@ -179,18 +177,15 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
                 const SizedBox(width: 16),
                 IconButton(
                   icon: const Icon(Icons.save),
-                  onPressed: () {
-                    // Ajoutez votre logique pour le bouton enregistrer ici
-                  },
+                  onPressed: () {},
                 ),
               ],
             ),
             const SizedBox(height: 16),
+            // Grille de l'éditeur de carte
             Expanded(
               child: Container(
                   color: Colors.grey[200],
-                  // Votre widget pour afficher la map ici
-
                   child: GameGridWidgetEditor(
                     gameMap: GameMap(
                       author: gameMap.getAuthor,
@@ -207,6 +202,7 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
                   )),
             ),
             const SizedBox(height: 16),
+            // Barre d'outils pour l'édition de la carte
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
@@ -261,6 +257,7 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
               ),
             ),
             const SizedBox(height: 16),
+            // Bouton pour valider et créer la carte
             Center(
               child: ElevatedButton(
                 onPressed: () => _validateAndCreateMap(context, gameMap),
@@ -272,10 +269,4 @@ class _MapCreatorScreenState extends State<MapCreatorScreen> {
       ),
     );
   }
-}
-
-@override
-Widget build(BuildContext context) {
-  // TODO: implement build
-  throw UnimplementedError();
 }

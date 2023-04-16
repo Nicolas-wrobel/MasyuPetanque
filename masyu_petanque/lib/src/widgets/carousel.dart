@@ -1,17 +1,15 @@
 import 'dart:async';
-
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:masyu_petanque/src/models/user.dart';
 import 'package:masyu_petanque/src/repositories/authentication/user_repository.dart';
-
 import 'package:masyu_petanque/src/screens/game_screen.dart';
-import '../models/game_grid.dart';
-import '../repositories/database/game_repository.dart';
-import '../screens/home_screen.dart';
-import 'game_grid_widget.dart';
+import 'package:masyu_petanque/src/models/game_grid.dart';
+import 'package:masyu_petanque/src/repositories/database/game_repository.dart';
+import 'package:masyu_petanque/src/screens/home_screen.dart';
+import 'package:masyu_petanque/src/widgets/game_grid_widget.dart';
 
+// Définit un widget personnalisé de type StatefulWidget appelé CarouselWithFavorites
 class CarouselWithFavorites extends StatefulWidget {
   final UserRepository userRepository;
   final GameRepository gameRepository;
@@ -39,6 +37,7 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
     _loadUserData();
   }
 
+  // Charge les données utilisateur
   Future<void> _loadUserData() async {
     final fetchedUser = await widget.userRepository.getUser();
     setState(() {
@@ -48,8 +47,9 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
 
   @override
   Widget build(BuildContext context) {
+    // Si l'utilisateur n'est pas encore chargé, affiche un indicateur de chargement
     if (user == null) {
-      return const CircularProgressIndicator(); // Afficher un indicateur de chargement si l'utilisateur n'est pas encore chargé
+      return const CircularProgressIndicator();
     }
 
     // Récupérer les cartes favorites de l'utilisateur
@@ -72,6 +72,7 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
             final favoriteMaps =
                 mapData.where((map) => favorites.contains(map.id)).toList();
 
+            // Affiche le contenu en fonction du filtre de favoris et de l'état du favori
             return ValueListenableBuilder<bool>(
               valueListenable:
                   FavoritesFilterProvider.of(context)!.favoritesFilterNotifier,
@@ -85,11 +86,13 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
                   );
                 }
 
+                // Construit un PageView avec les cartes filtrées
                 return ValueListenableBuilder<int>(
                   valueListenable: _currentIndex,
                   builder: (context, index, _) {
                     final map = displayedMaps[index];
 
+                    // Affiche les détails de la carte et le bouton de favori
                     return SingleChildScrollView(
                       child: Column(
                         children: [
@@ -108,11 +111,13 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
                               itemBuilder: (BuildContext context, int index) {
                                 final map = displayedMaps[index];
 
+                                // Crée un widget InkWell avec un GameGridWidget pour chaque carte
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 25.0),
                                   child: InkWell(
                                     onTap: () {
+                                      // Navigue vers l'écran de jeu lorsqu'on clique sur une carte
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -143,6 +148,7 @@ class _CarouselWithFavoritesState extends State<CarouselWithFavorites> {
                           ),
                           Text('Créateur: ${map.author}'),
                           Text('Meilleur temps: ${map.bestTime ?? 'N/A'}'),
+                          // Crée un bouton pour ajouter/supprimer la carte des favoris
                           IconButton(
                             icon: Icon(
                               favorites.contains(map.id)
